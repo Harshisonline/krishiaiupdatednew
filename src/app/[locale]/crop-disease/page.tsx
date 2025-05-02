@@ -13,6 +13,7 @@ import { Loader2, Upload, X, CheckCircle, AlertTriangle, ArrowLeft } from 'lucid
 import Image from 'next/image';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslations } from 'next-intl';
 
 const LoadingSpinner: FC = () => (
   <div className="flex justify-center items-center p-4">
@@ -20,46 +21,55 @@ const LoadingSpinner: FC = () => (
   </div>
 );
 
-const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -20 }}
-    transition={{ duration: 0.3 }}
-    className="mt-6"
-  >
-    <Alert variant={result.hasDisease ? "destructive" : "default"} className="bg-secondary text-secondary-foreground shadow-md">
-       <div className="flex items-center gap-2">
-         {result.hasDisease ? <AlertTriangle className="h-5 w-5 text-destructive" /> : <CheckCircle className="h-5 w-5 text-primary" />}
-         <AlertTitle className="font-bold">
-           {result.hasDisease ? `Disease Detected: ${result.diseaseName || 'Unknown Disease'}` : 'No Disease Detected'}
-         </AlertTitle>
-       </div>
-      <AlertDescription className="mt-2">
-        {!result.isPlant && <p className="mb-2 font-medium">Note: The uploaded image does not appear to be a plant.</p>}
-        {result.hasDisease && result.treatmentRecommendations && (
-          <div>
-            <h4 className="font-semibold mt-3 mb-1 text-foreground">Treatment Recommendations:</h4>
-            <p>{result.treatmentRecommendations}</p>
-          </div>
-        )}
-        {!result.hasDisease && result.isPlant && (
-           <p>The analysis indicates the plant appears healthy.</p>
-        )}
-      </AlertDescription>
-    </Alert>
-  </motion.div>
-);
+const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) => {
+  const t = useTranslations('CropDiseasePage');
+  const diseaseName = result.diseaseName || t('resultTitleUnknownDisease').split(': ')[1]; // Extract default name if none provided
+  const title = result.hasDisease ? t('resultTitleDisease', { diseaseName }) : t('resultTitleNoDisease');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ duration: 0.3 }}
+      className="mt-6"
+    >
+      <Alert variant={result.hasDisease ? "destructive" : "default"} className="bg-secondary text-secondary-foreground shadow-md">
+         <div className="flex items-center gap-2">
+           {result.hasDisease ? <AlertTriangle className="h-5 w-5 text-destructive" /> : <CheckCircle className="h-5 w-5 text-primary" />}
+           <AlertTitle className="font-bold">
+             {title}
+           </AlertTitle>
+         </div>
+        <AlertDescription className="mt-2">
+          {!result.isPlant && <p className="mb-2 font-medium">{t('resultNoteNotPlant')}</p>}
+          {result.hasDisease && result.treatmentRecommendations && (
+            <div>
+              <h4 className="font-semibold mt-3 mb-1 text-foreground">{t('resultRecommendationsHeading')}</h4>
+              <p>{result.treatmentRecommendations}</p>
+            </div>
+          )}
+          {!result.hasDisease && result.isPlant && (
+             <p>{t('resultHealthyMessage')}</p>
+          )}
+        </AlertDescription>
+      </Alert>
+    </motion.div>
+  );
+};
 
 
 const CropDiseasePage: FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // Keep internal error state if needed for logic, but rely on toast for display
   const [result, setResult] = useState<DiagnoseCropDiseaseOutput | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const t = useTranslations('CropDiseasePage');
+  const tNav = useTranslations('Navigation');
+
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -67,8 +77,8 @@ const CropDiseasePage: FC = () => {
       // Validate file type and size if necessary
       if (!file.type.startsWith('image/')) {
         toast({
-          title: "Invalid File Type",
-          description: "Please upload an image file (e.g., JPG, PNG, WEBP).",
+          title: t('invalidFileTypeErrorTitle'),
+          description: t('invalidFileTypeErrorDescription'),
           variant: "destructive",
         });
         return;
@@ -77,8 +87,8 @@ const CropDiseasePage: FC = () => {
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
          toast({
-          title: "File Too Large",
-          description: "Please upload an image smaller than 5MB.",
+          title: t('fileTooLargeErrorTitle'),
+          description: t('fileTooLargeErrorDescription'),
           variant: "destructive",
         });
         return;
@@ -109,8 +119,8 @@ const CropDiseasePage: FC = () => {
   const handleSubmit = async () => {
     if (!selectedFile || !previewUrl) {
        toast({
-          title: "No Image Selected",
-          description: "Please select an image to diagnose.",
+          title: t('noImageErrorTitle'),
+          description: t('noImageErrorDescription'),
           variant: "destructive",
         });
       return;
@@ -123,16 +133,17 @@ const CropDiseasePage: FC = () => {
     try {
       // Ensure previewUrl is a valid data URI string
       if (typeof previewUrl !== 'string' || !previewUrl.startsWith('data:image/')) {
-         throw new Error('Invalid image data format.');
+         throw new Error(t('invalidImageDataError'));
       }
       const prediction = await diagnoseCropDisease({ photoDataUri: previewUrl });
       setResult(prediction);
     } catch (err) {
       console.error('Error diagnosing crop disease:', err);
-      setError('Failed to diagnose crop disease. Please check the image or try again.');
+      const message = err instanceof Error ? err.message : t('diagnosisFailedErrorDescription');
+      setError(message); // Set internal error state if needed
        toast({
-          title: "Diagnosis Failed",
-          description: error || "An unexpected error occurred.",
+          title: t('diagnosisFailedErrorTitle'),
+          description: message,
           variant: "destructive",
         });
     } finally {
@@ -144,17 +155,17 @@ const CropDiseasePage: FC = () => {
     <div className="max-w-2xl mx-auto">
       <Link href="/" passHref className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="mr-1 h-4 w-4" />
-        Back to Home
+        {tNav('backToHome')}
       </Link>
       <Card className="w-full shadow-lg bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-2xl text-primary">Crop Disease Detection</CardTitle>
-          <CardDescription>Upload a photo of your crop to identify potential diseases.</CardDescription>
+          <CardTitle className="text-2xl text-primary">{t('title')}</CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="crop-picture">Upload Crop Photo</Label>
+              <Label htmlFor="crop-picture">{t('uploadLabel')}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   id="crop-picture"
@@ -163,13 +174,13 @@ const CropDiseasePage: FC = () => {
                   onChange={handleFileChange}
                   ref={fileInputRef}
                   className="flex-grow"
-                  aria-label="Upload Crop Photo"
+                  aria-label={t('uploadLabel')}
                 />
-                 <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} aria-label="Select Image">
+                 <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} aria-label={t('selectImageLabel')}>
                    <Upload className="h-4 w-4" />
                  </Button>
               </div>
-              <p className="text-xs text-muted-foreground">Upload an image (JPG, PNG, WEBP, max 5MB).</p>
+              <p className="text-xs text-muted-foreground">{t('uploadHint')}</p>
             </div>
 
             {previewUrl && (
@@ -184,7 +195,7 @@ const CropDiseasePage: FC = () => {
                     size="icon"
                     className="absolute top-2 right-2 h-6 w-6 z-10 bg-background/80 hover:bg-destructive hover:text-destructive-foreground rounded-full"
                     onClick={handleRemoveImage}
-                    aria-label="Remove image"
+                    aria-label={t('removeImageLabel')}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -203,7 +214,7 @@ const CropDiseasePage: FC = () => {
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={loading || !selectedFile}
             >
-              {loading ? 'Diagnosing...' : 'Diagnose Crop'}
+              {loading ? t('diagnosingButton') : t('diagnoseButton')}
             </Button>
           </div>
 

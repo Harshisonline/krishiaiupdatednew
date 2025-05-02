@@ -1,0 +1,93 @@
+
+{
+  "Metadata": {
+    "title": "KrishiAi+ | Plataforma de Agricultura Inteligente",
+    "description": "Soluciones impulsadas por IA para la agricultura moderna."
+  },
+  "HomePage": {
+    "title": "KrishiAi+",
+    "subtitle": "Revolucionando la agricultura con conocimientos impulsados por IA para tomar decisiones agrícolas más inteligentes. Prediga rendimientos, detecte enfermedades y obtenga recomendaciones de cultivos sin esfuerzo.",
+    "getStarted": "Empezar",
+    "features": {
+      "yieldPrediction": {
+        "title": "Predicción de Rendimiento de Cultivos",
+        "description": "Pronostique su potencial de cosecha basado en datos agrícolas clave."
+      },
+      "diseaseDetection": {
+        "title": "Detección de Enfermedades de Cultivos",
+        "description": "Identifique enfermedades de cultivos temprano con simples cargas de fotos."
+      },
+      "soilRecommendation": {
+        "title": "Recomendación Suelo-Cultivo",
+        "description": "Descubra los mejores cultivos para sus condiciones específicas de suelo."
+      }
+    }
+  },
+  "CropYieldPage": {
+    "title": "Predicción de Rendimiento de Cultivos",
+    "description": "Ingrese los detalles de su cultivo para estimar el rendimiento potencial.",
+    "cropTypeLabel": "Tipo de Cultivo",
+    "cropTypePlaceholder": "Ej., Trigo, Maíz, Arroz",
+    "locationLabel": "Ubicación (Ciudad/Región)",
+    "locationPlaceholder": "Ej., Valle Central, CA",
+    "plantingDateLabel": "Fecha de Siembra",
+    "pickDate": "Elija una fecha",
+    "predictButton": "Predecir Rendimiento",
+    "predictingButton": "Prediciendo...",
+    "error": "No se pudo predecir el rendimiento del cultivo. Inténtelo de nuevo.",
+    "resultTitle": "Rendimiento Previsto",
+    "resultUnit": "kg",
+    "resultDisclaimer": "Rendimiento estimado basado en los datos proporcionados. Los resultados reales pueden variar."
+  },
+  "CropDiseasePage": {
+    "title": "Detección de Enfermedades de Cultivos",
+    "description": "Suba una foto de su cultivo para identificar posibles enfermedades.",
+    "uploadLabel": "Subir Foto del Cultivo",
+    "uploadHint": "Subir una imagen (JPG, PNG, WEBP, máx 5MB).",
+    "selectImageLabel": "Seleccionar Imagen",
+    "removeImageLabel": "Eliminar imagen",
+    "diagnoseButton": "Diagnosticar Cultivo",
+    "diagnosingButton": "Diagnosticando...",
+    "noImageErrorTitle": "Ninguna Imagen Seleccionada",
+    "noImageErrorDescription": "Por favor seleccione una imagen para diagnosticar.",
+    "invalidFileTypeErrorTitle": "Tipo de Archivo Inválido",
+    "invalidFileTypeErrorDescription": "Por favor suba un archivo de imagen (ej., JPG, PNG, WEBP).",
+    "fileTooLargeErrorTitle": "Archivo Demasiado Grande",
+    "fileTooLargeErrorDescription": "Por favor suba una imagen menor a 5MB.",
+    "diagnosisFailedErrorTitle": "Diagnóstico Fallido",
+    "diagnosisFailedErrorDescription": "No se pudo diagnosticar la enfermedad del cultivo. Por favor revise la imagen o inténtelo de nuevo.",
+    "invalidImageDataError": "Formato de datos de imagen inválido.",
+    "resultTitleDisease": "Enfermedad Detectada: {diseaseName}",
+    "resultTitleUnknownDisease": "Enfermedad Detectada: Enfermedad Desconocida",
+    "resultTitleNoDisease": "No Se Detectó Enfermedad",
+    "resultNoteNotPlant": "Nota: La imagen subida no parece ser una planta.",
+    "resultRecommendationsHeading": "Recomendaciones de Tratamiento:",
+    "resultHealthyMessage": "El análisis indica que la planta parece sana."
+  },
+  "SoilRecommendationPage": {
+    "title": "Recomendación Suelo-Cultivo",
+    "description": "Suba una foto de su suelo para encontrar los mejores cultivos para crecer.",
+    "uploadLabel": "Subir Foto del Suelo",
+    "uploadHint": "Subir una imagen (JPG, PNG, WEBP, máx 5MB).",
+    "selectImageLabel": "Seleccionar Imagen",
+    "removeImageLabel": "Eliminar imagen",
+    "recommendButton": "Obtener Recomendaciones",
+    "analyzingButton": "Analizando...",
+    "noImageErrorTitle": "Ninguna Imagen Seleccionada",
+    "noImageErrorDescription": "Por favor seleccione una imagen del suelo.",
+    "invalidFileTypeErrorTitle": "Tipo de Archivo Inválido",
+    "invalidFileTypeErrorDescription": "Por favor suba un archivo de imagen (ej., JPG, PNG, WEBP).",
+    "fileTooLargeErrorTitle": "Archivo Demasiado Grande",
+    "fileTooLargeErrorDescription": "Por favor suba una imagen menor a 5MB.",
+    "recommendationFailedErrorTitle": "Recomendación Fallida",
+    "recommendationFailedErrorDescription": "No se pudieron obtener las recomendaciones de suelo. Por favor revise la imagen o inténtelo de nuevo.",
+    "invalidImageDataError": "Formato de datos de imagen inválido.",
+    "resultTitle": "Análisis de Suelo y Recomendaciones",
+    "resultSoilTypeHeading": "Tipo de Suelo Detectado:",
+    "resultRecommendationsHeading": "Cultivos Recomendados:",
+    "resultNoRecommendations": "No hay recomendaciones específicas de cultivos disponibles para este tipo de suelo."
+  },
+  "Navigation": {
+    "backToHome": "Volver al Inicio"
+  }
+}
