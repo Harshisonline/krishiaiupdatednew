@@ -1,7 +1,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
-// import { GeistMono } from 'geist/font/mono'; // Temporarily remove Mono
+// import { GeistMono } from 'geist/font/mono'; // Removed GeistMono import as it caused errors
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { notFound } from 'next/navigation';
@@ -9,16 +9,10 @@ import { NextIntlClientProvider, useMessages } from 'next-intl';
 import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher'; // Import LanguageSwitcher
 
-// Initialize fonts using the standard documented way
-const geistSans = GeistSans({ // Use lowercase for variable
-  variable: '--font-geist-sans',
-  // Ensure subsets are removed or correctly configured if needed. Removing for safety.
-});
+// Correctly assign the font object. GeistSans is not a function to be called here.
+const geistSans = GeistSans;
 
-// const geistMono = GeistMono({ // Temporarily remove Mono
-//   variable: '--font-geist-mono',
-// });
-
+// const geistMono = GeistMono; // Removed GeistMono usage
 
 // Function to generate metadata dynamically based on locale
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
@@ -83,7 +77,7 @@ export default function RootLayout({
   return (
     <html lang={locale}>
       <body
-        // Removed geistMono.variable
+        // Use the font variable directly from the font object
         className={`${geistSans.variable} antialiased min-h-screen bg-background text-foreground`}
       >
         {/* Pass the validated locale and loaded messages to the provider */}
