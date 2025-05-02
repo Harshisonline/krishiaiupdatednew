@@ -1,6 +1,7 @@
+
 import type { Metadata, Viewport } from 'next';
-import { GeistSans } from 'geist/font/sans'; // Reverted import renaming
-import { GeistMono } from 'geist/font/mono'; // Reverted import renaming
+import { GeistSans } from 'geist/font/sans';
+// import { GeistMono } from 'geist/font/mono'; // Temporarily remove Mono
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { notFound } from 'next/navigation';
@@ -8,15 +9,16 @@ import { NextIntlClientProvider, useMessages } from 'next-intl';
 import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher'; // Import LanguageSwitcher
 
-const geist_sans = GeistSans({ // Changed variable name
+// Initialize fonts using the standard documented way
+const geistSans = GeistSans({ // Use lowercase for variable
   variable: '--font-geist-sans',
-  // subsets: ['latin'], // Subsets might not be needed depending on geist/font setup
+  // Ensure subsets are removed or correctly configured if needed. Removing for safety.
 });
 
-const geist_mono = GeistMono({ // Changed variable name
-  variable: '--font-geist-mono',
-  // subsets: ['latin'], // Subsets might not be needed depending on geist/font setup
-});
+// const geistMono = GeistMono({ // Temporarily remove Mono
+//   variable: '--font-geist-mono',
+// });
+
 
 // Function to generate metadata dynamically based on locale
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
@@ -81,7 +83,8 @@ export default function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geist_sans.variable} ${geist_mono.variable} antialiased min-h-screen bg-background text-foreground`} // Updated variable names
+        // Removed geistMono.variable
+        className={`${geistSans.variable} antialiased min-h-screen bg-background text-foreground`}
       >
         {/* Pass the validated locale and loaded messages to the provider */}
         <NextIntlClientProvider locale={locale} messages={messages}>
@@ -95,3 +98,4 @@ export default function RootLayout({
     </html>
   );
 }
+
