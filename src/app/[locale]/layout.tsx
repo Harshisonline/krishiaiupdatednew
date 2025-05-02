@@ -18,15 +18,18 @@ export async function generateMetadata({ params: { locale } }: { params: { local
      console.error(`[generateMetadata] Invalid locale detected: ${locale}`);
     notFound();
   }
+  console.log(`[generateMetadata] Generating metadata for locale: ${locale}`);
 
   // Load messages for the current locale
   let messages;
   try {
      // Use absolute path alias
+     console.log(`[generateMetadata] Attempting to import messages for locale: ${locale}`);
      messages = (await import(`@/messages/${locale}.json`)).default;
+     console.log(`[generateMetadata] Successfully imported messages for locale: ${locale}`);
      if (!messages || !messages.Metadata) {
        // Ensure Metadata key exists
-       console.warn(`Metadata section missing or empty in messages/${locale}.json`);
+       console.warn(`[generateMetadata] Metadata section missing or empty in messages/${locale}.json`);
        // Provide default metadata or handle as needed
        return {
          title: 'KrishiAi+',
@@ -35,6 +38,9 @@ export async function generateMetadata({ params: { locale } }: { params: { local
      }
   } catch (error) {
     console.error(`[generateMetadata] Could not load or parse messages for locale: ${locale}`, error);
+    if (error instanceof Error && error.message.includes('Cannot find module')) {
+        console.error(`[generateMetadata] Import failed for locale "${locale}". File might be missing.`);
+    }
     // Provide default metadata on error
      return {
          title: 'KrishiAi+ (Error)',
@@ -62,6 +68,8 @@ export const viewport: Viewport = {
 
 // Function to generate static params for SSG
 export function generateStaticParams() {
+  // Ensure only valid locales are generated
+  console.log('[generateStaticParams] Generating static params for locales:', locales);
   return locales.map((locale) => ({ locale }));
 }
 
@@ -74,23 +82,40 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Validate locale robustly first
+  // Validate locale robustly FIRST
+  console.log(`[RootLayout] Received locale param: ${locale}`); // Log received locale
   if (!locales.includes(locale)) {
-     console.error(`Invalid locale detected in RootLayout render: ${locale}`);
+     console.error(`[RootLayout] Invalid locale detected early: ${locale}. Triggering notFound().`);
     notFound();
   }
+  console.log(`[RootLayout] Locale "${locale}" passed initial validation.`); // Log validation success
+
 
   // Fetch messages server-side directly after validation
   let messages;
   try {
+    // Add extra check and log right before import
+    if (!locales.includes(locale)) {
+       console.error(`[RootLayout] CRITICAL: Invalid locale "${locale}" detected JUST BEFORE import! Triggering notFound().`);
+       notFound(); // This shouldn't be reached if the first check works, but acts as a safeguard
+    }
+    console.log(`[RootLayout] Attempting to import messages for locale: ${locale}`);
     messages = (await import(`@/messages/${locale}.json`)).default;
+    console.log(`[RootLayout] Successfully imported messages for locale: ${locale}`);
+
     if (!messages) {
+       console.error(`[RootLayout] Messages file is empty or invalid for locale: ${locale}`);
       throw new Error(`Messages file is empty or invalid for locale: ${locale}`);
     }
   } catch (error) {
-    console.error(`Failed to load messages for locale "${locale}" in layout:`, error);
+    console.error(`[RootLayout] Failed to load messages for locale "${locale}":`, error);
+    // Log the specific error if it's the import failing
+    if (error instanceof Error && error.message.includes('Cannot find module')) {
+        console.error(`[RootLayout] Import failed for locale "${locale}". This likely means the file doesn't exist or the path is wrong.`);
+    }
     notFound(); // Throw 404 if messages cannot be loaded
   }
+
 
   // DO NOT call useMessages() here. It's for Client Components.
 
