@@ -1,6 +1,6 @@
 
 import type { Metadata, Viewport } from 'next';
-import { GeistSans } from 'geist/font/sans'; // Direct import of the font object
+import { GeistSans } from 'geist/font/sans';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { notFound } from 'next/navigation';
@@ -8,11 +8,14 @@ import { NextIntlClientProvider } from 'next-intl';
 import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
+// Initialize font using the standard documented way
+const geistSans = GeistSans; // Use the imported object directly
+
 // Function to generate metadata dynamically based on locale
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
   // Validate locale first
   if (!locales.includes(locale)) {
-     console.error(`Invalid locale detected in generateMetadata: ${locale}`);
+     console.error(`[generateMetadata] Invalid locale detected: ${locale}`);
     notFound();
   }
 
@@ -22,20 +25,32 @@ export async function generateMetadata({ params: { locale } }: { params: { local
      // Use absolute path alias
      messages = (await import(`@/messages/${locale}.json`)).default;
      if (!messages || !messages.Metadata) {
-       throw new Error(`Metadata section missing in messages/${locale}.json`);
+       // Ensure Metadata key exists
+       console.warn(`Metadata section missing or empty in messages/${locale}.json`);
+       // Provide default metadata or handle as needed
+       return {
+         title: 'KrishiAi+',
+         description: 'Smart Farming Platform',
+       };
      }
   } catch (error) {
-    console.error(`Could not load or parse messages for locale: ${locale}`, error);
-    notFound();
+    console.error(`[generateMetadata] Could not load or parse messages for locale: ${locale}`, error);
+    // Provide default metadata on error
+     return {
+         title: 'KrishiAi+ (Error)',
+         description: 'Error loading configuration.',
+       };
   }
 
-  const t = (key: string) => messages.Metadata?.[key] || `Missing Metadata.${key}`;
+  // Safe access to metadata assuming messages and messages.Metadata exist after checks/defaults
+  const t = (key: string) => messages?.Metadata?.[key] || `Missing Metadata.${key}`;
 
   return {
     title: t('title'),
     description: t('description'),
   };
 }
+
 
 export const viewport: Viewport = {
   themeColor: [
@@ -50,20 +65,6 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
-// Helper function to fetch messages server-side
-async function getMessages(locale: string) {
-  if (!locales.includes(locale)) {
-    console.error(`Invalid locale passed to getMessages: ${locale}`);
-    notFound();
-  }
-  try {
-    // Use absolute path alias
-    return (await import(`@/messages/${locale}.json`)).default;
-  } catch (error) {
-    console.error(`Failed to load messages for locale "${locale}" in layout:`, error);
-    notFound(); // Throw 404 if messages are missing
-  }
-}
 
 // Make the RootLayout component async to fetch messages
 export default async function RootLayout({
@@ -73,14 +74,23 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Validate locale early in the component rendering
+  // Validate locale robustly first
   if (!locales.includes(locale)) {
      console.error(`Invalid locale detected in RootLayout render: ${locale}`);
     notFound();
   }
 
-  // Fetch messages server-side
-  const messages = await getMessages(locale);
+  // Fetch messages server-side directly after validation
+  let messages;
+  try {
+    messages = (await import(`@/messages/${locale}.json`)).default;
+    if (!messages) {
+      throw new Error(`Messages file is empty or invalid for locale: ${locale}`);
+    }
+  } catch (error) {
+    console.error(`Failed to load messages for locale "${locale}" in layout:`, error);
+    notFound(); // Throw 404 if messages cannot be loaded
+  }
 
   // DO NOT call useMessages() here. It's for Client Components.
 
@@ -88,7 +98,7 @@ export default async function RootLayout({
     <html lang={locale}>
       <body
         // Apply font variable correctly using the imported object's variable property
-        className={`${GeistSans.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${geistSans.variable} antialiased min-h-screen bg-background text-foreground`}
       >
         {/* Pass the validated locale and fetched messages to the provider */}
         <NextIntlClientProvider locale={locale} messages={messages}>
@@ -102,3 +112,4 @@ export default async function RootLayout({
     </html>
   );
 }
+
