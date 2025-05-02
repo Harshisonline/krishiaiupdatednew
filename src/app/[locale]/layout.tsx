@@ -9,7 +9,12 @@ import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // Initialize font using the standard documented way
-const geistSans = GeistSans; // Use the imported object directly
+// Ensure you import GeistSans correctly.
+// const geistSans = GeistSans({ // Incorrect: GeistSans is not a function to be called like this for setup
+//   variable: '--font-geist-sans',
+// });
+// Correct way: Use the imported object directly for class names.
+const geistSans = GeistSans;
 
 // Function to generate metadata dynamically based on locale
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
@@ -98,12 +103,13 @@ export default async function RootLayout({
   // Fetch messages server-side directly after validation
   let messages;
   try {
-    // Add extra validation right before import as a safeguard
+    // CRITICAL: Final validation JUST BEFORE the import
     if (!locales.includes(locale)) {
-       console.error(`[RootLayout] CRITICAL: Invalid locale "${locale}" detected JUST BEFORE import! Valid locales: ${locales.join(', ')}. Triggering notFound().`);
-       notFound(); // This shouldn't be reached if the first check works, but acts as a safeguard
+       console.error(`[RootLayout] FATAL: Invalid locale "${locale}" detected JUST BEFORE dynamic import! Triggering notFound().`);
+       notFound(); // If this happens, something is wrong with routing/middleware
     }
-    console.log(`[RootLayout] Attempting to import messages for locale: ${locale}`);
+    // If the locale passed the check above, proceed with the import
+    console.log(`[RootLayout] Attempting to import messages for valid locale: ${locale}`);
     messages = (await import(`@/messages/${locale}.json`)).default;
     console.log(`[RootLayout] Successfully imported messages for locale: ${locale}`);
 
