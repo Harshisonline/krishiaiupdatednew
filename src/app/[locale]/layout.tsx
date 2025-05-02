@@ -4,7 +4,7 @@ import { GeistSans } from 'geist/font/sans';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider } from 'next-intl';
+import { NextIntlClientProvider, useMessages } from 'next-intl';
 import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -15,7 +15,7 @@ const geistSans = GeistSans; // Use the imported object directly
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
   // Validate locale first
   if (!locales.includes(locale)) {
-     console.error(`[generateMetadata] Invalid locale detected: ${locale}`);
+     console.error(`[generateMetadata] Invalid locale detected: ${locale}. Valid locales: ${locales.join(', ')}`);
     notFound();
   }
   console.log(`[generateMetadata] Generating metadata for locale: ${locale}`);
@@ -23,7 +23,11 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   // Load messages for the current locale
   let messages;
   try {
-     // Use absolute path alias
+     // Add extra check and log right before import
+     if (!locales.includes(locale)) {
+       console.error(`[generateMetadata] CRITICAL: Invalid locale "${locale}" detected JUST BEFORE import! Valid locales: ${locales.join(', ')}. Triggering notFound().`);
+       notFound(); // Safeguard
+     }
      console.log(`[generateMetadata] Attempting to import messages for locale: ${locale}`);
      messages = (await import(`@/messages/${locale}.json`)).default;
      console.log(`[generateMetadata] Successfully imported messages for locale: ${locale}`);
@@ -39,7 +43,7 @@ export async function generateMetadata({ params: { locale } }: { params: { local
   } catch (error) {
     console.error(`[generateMetadata] Could not load or parse messages for locale: ${locale}`, error);
     if (error instanceof Error && error.message.includes('Cannot find module')) {
-        console.error(`[generateMetadata] Import failed for locale "${locale}". File might be missing.`);
+        console.error(`[generateMetadata] Import failed for locale "${locale}". File might be missing or the locale param is invalid.`);
     }
     // Provide default metadata on error
      return {
@@ -82,10 +86,10 @@ export default async function RootLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Validate locale robustly FIRST
+  // Validate locale robustly FIRST - This is critical
   console.log(`[RootLayout] Received locale param: ${locale}`); // Log received locale
   if (!locales.includes(locale)) {
-     console.error(`[RootLayout] Invalid locale detected early: ${locale}. Triggering notFound().`);
+     console.error(`[RootLayout] Invalid locale detected early: "${locale}". Valid locales: ${locales.join(', ')}. Triggering notFound().`);
     notFound();
   }
   console.log(`[RootLayout] Locale "${locale}" passed initial validation.`); // Log validation success
@@ -94,9 +98,9 @@ export default async function RootLayout({
   // Fetch messages server-side directly after validation
   let messages;
   try {
-    // Add extra check and log right before import
+    // Add extra validation right before import as a safeguard
     if (!locales.includes(locale)) {
-       console.error(`[RootLayout] CRITICAL: Invalid locale "${locale}" detected JUST BEFORE import! Triggering notFound().`);
+       console.error(`[RootLayout] CRITICAL: Invalid locale "${locale}" detected JUST BEFORE import! Valid locales: ${locales.join(', ')}. Triggering notFound().`);
        notFound(); // This shouldn't be reached if the first check works, but acts as a safeguard
     }
     console.log(`[RootLayout] Attempting to import messages for locale: ${locale}`);
@@ -111,21 +115,20 @@ export default async function RootLayout({
     console.error(`[RootLayout] Failed to load messages for locale "${locale}":`, error);
     // Log the specific error if it's the import failing
     if (error instanceof Error && error.message.includes('Cannot find module')) {
-        console.error(`[RootLayout] Import failed for locale "${locale}". This likely means the file doesn't exist or the path is wrong.`);
+        // This is the likely cause of the 'unknown' module error if locale is invalid
+        console.error(`[RootLayout] Import failed for locale "${locale}". This likely means the file doesn't exist OR the locale parameter itself was invalid (e.g., "unknown").`);
     }
     notFound(); // Throw 404 if messages cannot be loaded
   }
 
 
-  // DO NOT call useMessages() here. It's for Client Components.
-
+  // Pass the validated locale and fetched messages to the provider
   return (
     <html lang={locale}>
       <body
         // Apply font variable correctly using the imported object's variable property
         className={`${geistSans.variable} antialiased min-h-screen bg-background text-foreground`}
       >
-        {/* Pass the validated locale and fetched messages to the provider */}
         <NextIntlClientProvider locale={locale} messages={messages}>
           <div className="absolute top-4 right-4 z-50">
              <LanguageSwitcher />
@@ -137,4 +140,3 @@ export default async function RootLayout({
     </html>
   );
 }
-
