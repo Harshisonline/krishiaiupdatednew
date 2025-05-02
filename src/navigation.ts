@@ -1,5 +1,5 @@
 import {createSharedPathnamesNavigation} from 'next-intl/navigation';
-import {locales, pathnames, localePrefix} from './i18n'; // Import pathnames
+import {locales, localePrefix} from './i18n'; // Remove pathnames import
 
 export const {Link, redirect, usePathname, useRouter} =
-  createSharedPathnamesNavigation({locales, localePrefix, pathnames}); // Add pathnames config
+  createSharedPathnamesNavigation({locales, localePrefix}); // Remove pathnames config

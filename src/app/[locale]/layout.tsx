@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider, useMessages, useTranslations } from 'next-intl';
+import { NextIntlClientProvider, useMessages } from 'next-intl'; // Removed unused useTranslations
 import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher'; // Import LanguageSwitcher
 
@@ -21,7 +21,14 @@ const geistMono = Geist_Mono({
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
   // Load messages for the current locale
   // Note: Adjust the path based on your project structure
-  const messages = (await import(`../../../messages/${locale}.json`)).default;
+  let messages;
+  try {
+     messages = (await import(`../../../messages/${locale}.json`)).default;
+  } catch (error) {
+    console.error(`Could not load messages for locale: ${locale}`, error);
+    notFound(); // Trigger 404 if messages can't be loaded
+  }
+
   const t = (key: string) => messages.Metadata?.[key] || key; // Simple translation helper
 
   return {
