@@ -13,8 +13,32 @@ import { Loader2, Upload, X, Leaf, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
-import { useTranslations } from 'next-intl';
 
+// Hardcoded English Strings
+const pageStrings = {
+    title: "Soil-to-Crop Recommendation",
+    description: "Upload a photo of your soil to find the best crops to grow.",
+    uploadLabel: "Upload Soil Photo",
+    uploadHint: "Upload an image (JPG, PNG, WEBP, max 5MB).",
+    selectImageLabel: "Select Image",
+    removeImageLabel: "Remove image",
+    recommendButton: "Get Recommendations",
+    analyzingButton: "Analyzing...",
+    noImageErrorTitle: "No Image Selected",
+    noImageErrorDescription: "Please select an image of the soil.",
+    invalidFileTypeErrorTitle: "Invalid File Type",
+    invalidFileTypeErrorDescription: "Please upload an image file (e.g., JPG, PNG, WEBP).",
+    fileTooLargeErrorTitle: "File Too Large",
+    fileTooLargeErrorDescription: "Please upload an image smaller than 5MB.",
+    recommendationFailedErrorTitle: "Recommendation Failed",
+    recommendationFailedErrorDescription: "Failed to get soil recommendations. Please check the image or try again.",
+    invalidImageDataError: "Invalid image data format.",
+    resultTitle: "Soil Analysis & Recommendations",
+    resultSoilTypeHeading: "Detected Soil Type:",
+    resultRecommendationsHeading: "Recommended Crops:",
+    resultNoRecommendations: "No specific crop recommendations available for this soil type.",
+    backToHome: "Back to Home"
+};
 
 const LoadingSpinner: FC = () => (
   <div className="flex justify-center items-center p-4">
@@ -23,8 +47,6 @@ const LoadingSpinner: FC = () => (
 );
 
 const ResultDisplay: FC<{ result: RecommendCropsOutput }> = ({ result }) => {
-  const t = useTranslations('SoilRecommendationPage');
-
  return (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
@@ -37,16 +59,16 @@ const ResultDisplay: FC<{ result: RecommendCropsOutput }> = ({ result }) => {
         <CardHeader>
            <div className="flex items-center gap-2">
               <Leaf className="h-5 w-5 text-primary" />
-              <CardTitle>{t('resultTitle')}</CardTitle>
+              <CardTitle>{pageStrings.resultTitle}</CardTitle>
            </div>
         </CardHeader>
         <CardContent className="space-y-3">
            <div>
-             <h4 className="font-semibold text-foreground">{t('resultSoilTypeHeading')}</h4>
+             <h4 className="font-semibold text-foreground">{pageStrings.resultSoilTypeHeading}</h4>
              <p className="text-lg font-medium text-primary">{result.soilType}</p>
            </div>
             <div>
-              <h4 className="font-semibold text-foreground">{t('resultRecommendationsHeading')}</h4>
+              <h4 className="font-semibold text-foreground">{pageStrings.resultRecommendationsHeading}</h4>
               {result.recommendedCrops.length > 0 ? (
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   {result.recommendedCrops.map((crop) => (
@@ -54,7 +76,7 @@ const ResultDisplay: FC<{ result: RecommendCropsOutput }> = ({ result }) => {
                   ))}
                 </ul>
               ) : (
-                <p className="text-muted-foreground">{t('resultNoRecommendations')}</p>
+                <p className="text-muted-foreground">{pageStrings.resultNoRecommendations}</p>
               )}
            </div>
         </CardContent>
@@ -72,16 +94,14 @@ const SoilRecommendationPage: FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const t = useTranslations('SoilRecommendationPage');
-  const tNav = useTranslations('Navigation');
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
        if (!file.type.startsWith('image/')) {
         toast({
-          title: t('invalidFileTypeErrorTitle'),
-          description: t('invalidFileTypeErrorDescription'),
+          title: pageStrings.invalidFileTypeErrorTitle,
+          description: pageStrings.invalidFileTypeErrorDescription,
           variant: "destructive",
         });
         return;
@@ -89,8 +109,8 @@ const SoilRecommendationPage: FC = () => {
       const maxSize = 5 * 1024 * 1024; // 5MB
       if (file.size > maxSize) {
          toast({
-          title: t('fileTooLargeErrorTitle'),
-          description: t('fileTooLargeErrorDescription'),
+          title: pageStrings.fileTooLargeErrorTitle,
+          description: pageStrings.fileTooLargeErrorDescription,
           variant: "destructive",
         });
         return;
@@ -121,8 +141,8 @@ const SoilRecommendationPage: FC = () => {
   const handleSubmit = async () => {
     if (!selectedFile || !previewUrl) {
        toast({
-          title: t('noImageErrorTitle'),
-          description: t('noImageErrorDescription'),
+          title: pageStrings.noImageErrorTitle,
+          description: pageStrings.noImageErrorDescription,
           variant: "destructive",
         });
       return;
@@ -134,16 +154,16 @@ const SoilRecommendationPage: FC = () => {
 
     try {
        if (typeof previewUrl !== 'string' || !previewUrl.startsWith('data:image/')) {
-         throw new Error(t('invalidImageDataError'));
+         throw new Error(pageStrings.invalidImageDataError);
       }
       const prediction = await recommendCrops({ soilPhotoDataUri: previewUrl });
       setResult(prediction);
     } catch (err) {
       console.error('Error getting soil recommendations:', err);
-      const message = err instanceof Error ? err.message : t('recommendationFailedErrorDescription');
+      const message = err instanceof Error ? err.message : pageStrings.recommendationFailedErrorDescription;
       setError(message); // Set internal error state if needed
        toast({
-          title: t('recommendationFailedErrorTitle'),
+          title: pageStrings.recommendationFailedErrorTitle,
           description: message,
           variant: "destructive",
         });
@@ -156,17 +176,17 @@ const SoilRecommendationPage: FC = () => {
     <div className="max-w-2xl mx-auto">
        <Link href="/" passHref className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="mr-1 h-4 w-4" />
-        {tNav('backToHome')}
+        {pageStrings.backToHome}
       </Link>
       <Card className="w-full shadow-lg bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-2xl text-primary">{t('title')}</CardTitle>
-          <CardDescription>{t('description')}</CardDescription>
+          <CardTitle className="text-2xl text-primary">{pageStrings.title}</CardTitle>
+          <CardDescription>{pageStrings.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="soil-picture">{t('uploadLabel')}</Label>
+              <Label htmlFor="soil-picture">{pageStrings.uploadLabel}</Label>
                <div className="flex items-center gap-2">
                 <Input
                   id="soil-picture"
@@ -175,13 +195,13 @@ const SoilRecommendationPage: FC = () => {
                   onChange={handleFileChange}
                   ref={fileInputRef}
                   className="flex-grow"
-                  aria-label={t('uploadLabel')}
+                  aria-label={pageStrings.uploadLabel}
                 />
-                 <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} aria-label={t('selectImageLabel')}>
+                 <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()} aria-label={pageStrings.selectImageLabel}>
                    <Upload className="h-4 w-4" />
                  </Button>
               </div>
-               <p className="text-xs text-muted-foreground">{t('uploadHint')}</p>
+               <p className="text-xs text-muted-foreground">{pageStrings.uploadHint}</p>
             </div>
 
             {previewUrl && (
@@ -196,7 +216,7 @@ const SoilRecommendationPage: FC = () => {
                     size="icon"
                     className="absolute top-2 right-2 h-6 w-6 z-10 bg-background/80 hover:bg-destructive hover:text-destructive-foreground rounded-full"
                     onClick={handleRemoveImage}
-                    aria-label={t('removeImageLabel')}
+                    aria-label={pageStrings.removeImageLabel}
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -215,7 +235,7 @@ const SoilRecommendationPage: FC = () => {
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={loading || !selectedFile}
             >
-              {loading ? t('analyzingButton') : t('recommendButton')}
+              {loading ? pageStrings.analyzingButton : pageStrings.recommendButton}
             </Button>
           </div>
 

@@ -18,11 +18,30 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+
+
+// Hardcoded English Strings
+const pageStrings = {
+    title: "Crop Yield Prediction",
+    description: "Enter your crop details to estimate the potential yield.",
+    cropTypeLabel: "Crop Type",
+    cropTypePlaceholder: "e.g., Wheat, Corn, Rice",
+    locationLabel: "Location (City/Region)",
+    locationPlaceholder: "e.g., Central Valley, CA",
+    plantingDateLabel: "Planting Date",
+    pickDate: "Pick a date",
+    predictButton: "Predict Yield",
+    predictingButton: "Predicting...",
+    error: "Failed to predict crop yield. Please try again.",
+    resultTitle: "Predicted Yield",
+    resultUnit: "kg",
+    resultDisclaimer: "Estimated yield based on provided data. Actual results may vary.",
+    backToHome: "Back to Home"
+};
 
 // Schema can remain in English as it's for validation logic
 const formSchema = z.object({
-  cropType: z.string().min(2, { message: 'Crop type must be at least 2 characters.' }), // Error messages can be translated in FormMessage component if needed
+  cropType: z.string().min(2, { message: 'Crop type must be at least 2 characters.' }),
   location: z.string().min(3, { message: 'Location must be at least 3 characters.' }),
   plantingDate: z.date({ required_error: 'Planting date is required.' }),
 });
@@ -36,7 +55,6 @@ const LoadingSpinner: FC = () => (
 );
 
 const ResultCard: FC<{ result: CropYield }> = ({ result }) => {
-  const t = useTranslations('CropYieldPage');
   return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -46,14 +64,14 @@ const ResultCard: FC<{ result: CropYield }> = ({ result }) => {
       >
         <Card className="mt-6 bg-secondary text-secondary-foreground shadow-md">
           <CardHeader>
-            <CardTitle>{t('resultTitle')}</CardTitle>
+            <CardTitle>{pageStrings.resultTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-primary">
-              {result.predictedYieldKg.toLocaleString()} {t('resultUnit')}
+              {result.predictedYieldKg.toLocaleString()} {pageStrings.resultUnit}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {t('resultDisclaimer')}
+              {pageStrings.resultDisclaimer}
             </p>
           </CardContent>
         </Card>
@@ -66,9 +84,6 @@ const CropYieldPage: FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CropYield | null>(null);
-  const t = useTranslations('CropYieldPage');
-  const tNav = useTranslations('Navigation');
-
 
   const form = useForm<CropYieldFormValues>({
     resolver: zodResolver(formSchema),
@@ -78,10 +93,6 @@ const CropYieldPage: FC = () => {
       plantingDate: undefined,
     },
   });
-
-  // Translate Zod error messages within the FormMessage component if needed,
-  // or adjust the schema error messages based on the current locale if complexity is acceptable.
-  // For simplicity, keeping English messages here.
 
   const onSubmit = async (values: CropYieldFormValues) => {
     setLoading(true);
@@ -96,7 +107,7 @@ const CropYieldPage: FC = () => {
       setResult(prediction);
     } catch (err) {
       console.error('Error predicting crop yield:', err);
-      setError(t('error'));
+      setError(pageStrings.error);
     } finally {
       setLoading(false);
     }
@@ -106,12 +117,12 @@ const CropYieldPage: FC = () => {
     <div className="max-w-2xl mx-auto">
       <Link href="/" passHref className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4">
         <ArrowLeft className="mr-1 h-4 w-4" />
-        {tNav('backToHome')}
+        {pageStrings.backToHome}
       </Link>
       <Card className="w-full shadow-lg bg-card text-card-foreground">
         <CardHeader>
-          <CardTitle className="text-2xl text-primary">{t('title')}</CardTitle>
-          <CardDescription>{t('description')}</CardDescription>
+          <CardTitle className="text-2xl text-primary">{pageStrings.title}</CardTitle>
+          <CardDescription>{pageStrings.description}</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -121,9 +132,9 @@ const CropYieldPage: FC = () => {
                 name="cropType"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('cropTypeLabel')}</FormLabel>
+                    <FormLabel>{pageStrings.cropTypeLabel}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('cropTypePlaceholder')} {...field} />
+                      <Input placeholder={pageStrings.cropTypePlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -134,9 +145,9 @@ const CropYieldPage: FC = () => {
                 name="location"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('locationLabel')}</FormLabel>
+                    <FormLabel>{pageStrings.locationLabel}</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('locationPlaceholder')} {...field} />
+                      <Input placeholder={pageStrings.locationPlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -147,7 +158,7 @@ const CropYieldPage: FC = () => {
                 name="plantingDate"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>{t('plantingDateLabel')}</FormLabel>
+                    <FormLabel>{pageStrings.plantingDateLabel}</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -161,7 +172,7 @@ const CropYieldPage: FC = () => {
                             {field.value ? (
                               format(field.value, 'PPP')
                             ) : (
-                              <span>{t('pickDate')}</span>
+                              <span>{pageStrings.pickDate}</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -184,7 +195,7 @@ const CropYieldPage: FC = () => {
                 )}
               />
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
-                {loading ? t('predictingButton') : t('predictButton')}
+                {loading ? pageStrings.predictingButton : pageStrings.predictButton}
               </Button>
             </form>
           </Form>
