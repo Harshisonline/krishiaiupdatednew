@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
-import { GeistSans } from 'geist/font/sans'; // Corrected import
-import { GeistMono } from 'geist/font/mono'; // Corrected import
+import { GeistSans } from 'geist/font/sans'; // Reverted import renaming
+import { GeistMono } from 'geist/font/mono'; // Reverted import renaming
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { notFound } from 'next/navigation';
@@ -8,12 +8,12 @@ import { NextIntlClientProvider, useMessages } from 'next-intl';
 import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher'; // Import LanguageSwitcher
 
-const geistSans = GeistSans({ // Use the correct font object name
+const geist_sans = GeistSans({ // Changed variable name
   variable: '--font-geist-sans',
   // subsets: ['latin'], // Subsets might not be needed depending on geist/font setup
 });
 
-const geistMono = GeistMono({ // Use the correct font object name
+const geist_mono = GeistMono({ // Changed variable name
   variable: '--font-geist-mono',
   // subsets: ['latin'], // Subsets might not be needed depending on geist/font setup
 });
@@ -81,7 +81,7 @@ export default function RootLayout({
   return (
     <html lang={locale}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${geist_sans.variable} ${geist_mono.variable} antialiased min-h-screen bg-background text-foreground`} // Updated variable names
       >
         {/* Pass the validated locale and loaded messages to the provider */}
         <NextIntlClientProvider locale={locale} messages={messages}>
