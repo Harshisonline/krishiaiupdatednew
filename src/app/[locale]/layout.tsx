@@ -1,35 +1,47 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { GeistSans } from 'geist/font/sans'; // Corrected import
+import { GeistMono } from 'geist/font/mono'; // Corrected import
 import '../globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { notFound } from 'next/navigation';
-import { NextIntlClientProvider, useMessages } from 'next-intl'; // Removed unused useTranslations
+import { NextIntlClientProvider, useMessages } from 'next-intl';
 import { locales } from '../../../i18n'; // Adjust path if needed
 import LanguageSwitcher from '@/components/LanguageSwitcher'; // Import LanguageSwitcher
 
-const geistSans = Geist({
+const geistSans = GeistSans({ // Use the correct font object name
   variable: '--font-geist-sans',
-  subsets: ['latin'],
+  // subsets: ['latin'], // Subsets might not be needed depending on geist/font setup
 });
 
-const geistMono = Geist_Mono({
+const geistMono = GeistMono({ // Use the correct font object name
   variable: '--font-geist-mono',
-  subsets: ['latin'],
+  // subsets: ['latin'], // Subsets might not be needed depending on geist/font setup
 });
 
 // Function to generate metadata dynamically based on locale
 export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
-  // Load messages for the current locale
-  // Note: Adjust the path based on your project structure
-  let messages;
-  try {
-     messages = (await import(`../../../messages/${locale}.json`)).default;
-  } catch (error) {
-    console.error(`Could not load messages for locale: ${locale}`, error);
-    notFound(); // Trigger 404 if messages can't be loaded
+  // Validate locale first
+  if (!locales.includes(locale)) {
+     console.error(`Invalid locale detected in generateMetadata: ${locale}`);
+    notFound();
   }
 
-  const t = (key: string) => messages.Metadata?.[key] || key; // Simple translation helper
+  // Load messages for the current locale
+  let messages;
+  try {
+     // Ensure the path is correct relative to this file's location
+     messages = (await import(`../../../messages/${locale}.json`)).default;
+     if (!messages || !messages.Metadata) {
+       throw new Error(`Metadata section missing in messages/${locale}.json`);
+     }
+  } catch (error) {
+    console.error(`Could not load or parse messages for locale: ${locale}`, error);
+    // Trigger a 404 if messages can't be loaded or are invalid
+    notFound();
+  }
+
+  // Simple translation helper using loaded messages
+  const t = (key: string) => messages.Metadata?.[key] || `Missing Metadata.${key}`;
 
   return {
     title: t('title'),
@@ -57,11 +69,13 @@ export default function RootLayout({
   children: React.ReactNode;
   params: { locale: string };
 }) {
-  // Validate locale
+  // Validate locale early in the component rendering
   if (!locales.includes(locale)) {
+     console.error(`Invalid locale detected in RootLayout render: ${locale}`);
     notFound();
   }
 
+  // useMessages must be called within the component to access context
   const messages = useMessages();
 
   return (
@@ -69,6 +83,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-background text-foreground`}
       >
+        {/* Pass the validated locale and loaded messages to the provider */}
         <NextIntlClientProvider locale={locale} messages={messages}>
           <div className="absolute top-4 right-4 z-50">
              <LanguageSwitcher />
