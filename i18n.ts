@@ -1,3 +1,4 @@
+
 import {notFound} from 'next/navigation';
 import {getRequestConfig} from 'next-intl/server';
 
@@ -14,8 +15,8 @@ export default getRequestConfig(async ({locale}) => {
 
   let messages;
   try {
-    // Load the messages for the validated locale
-    messages = (await import(`./messages/${locale}.json`)).default;
+    // Load the messages for the validated locale using absolute path alias
+    messages = (await import(`@/messages/${locale}.json`)).default;
     if (!messages) {
       throw new Error(`Messages file is empty or invalid for locale: ${locale}`);
     }
