@@ -4,7 +4,7 @@ import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
-// Initialize font object - Correct way to use GeistSans with Next.js Font Optimization
+// Initialize font object
 const geistSans = GeistSans;
 
 export const metadata: Metadata = {
@@ -43,6 +43,7 @@ export default function RootLayout({
          <meta name="msapplication-tap-highlight" content="no" />
          {/* Link to manifest */}
          <link rel="manifest" href="/manifest.json" />
+         {/* Add other head elements like scripts or styles here */}
        </head>
       {/* Apply the font variable to the body */}
       <body
@@ -54,4 +55,3 @@ export default function RootLayout({
     </html>
   );
 }
-
