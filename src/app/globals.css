@@ -100,3 +100,45 @@ body {
 .loading-spinner {
   @apply inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite];
 }
+
+
+/* Attempt to style Google Translate Widget - May be fragile */
+/* Hide the default Google logo and text */
+.goog-logo-link, .goog-te-gadget .goog-te-combo {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+}
+
+/* Style the dropdown select element */
+.goog-te-combo {
+    @apply appearance-none bg-inherit text-inherit border border-input rounded-md py-1 px-2 m-0 cursor-pointer h-full;
+    /* Inherit text and background color, apply input border */
+}
+
+/* Style the container div if needed (redundant with inline styles but can be used for specificity) */
+#google_translate_element .skiptranslate {
+    @apply inline-block align-middle;
+}
+
+/* Remove extra padding/margins Google might add */
+.goog-te-gadget {
+    font-size: inherit !important;
+    line-height: inherit !important;
+    display: inline-block;
+}
+.goog-te-gadget span {
+    display: none !important; /* Hide the "Powered by Google Translate" text if desired */
+}
+/* Style the dropdown iframe container */
+body > .skiptranslate > iframe {
+    visibility: hidden !important; /* Initially hide the banner */
+}
+body > .skiptranslate {
+   /* Attempt to style the banner - very difficult due to iframe */
+   /* You might need JavaScript to manipulate styles after it appears */
+   /* Example: Force it to bottom */
+    /* bottom: 0 !important;
+    top: auto !important; */
+}
+
+/* Further refinement might be needed, Google Translate styling is notoriously tricky */

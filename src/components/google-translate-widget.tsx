@@ -57,7 +57,19 @@ export default function GoogleTranslateWidget() {
 
   return (
     // This div will be targeted by the Google Translate widget
-    // Apply positioning styles here if needed, e.g., absolute positioning for a corner dropdown
-    <div id="google_translate_element" className="container mx-auto px-4 pt-4"></div>
+    // Apply positioning and button-like styles here
+    <div className="container mx-auto px-4 pt-4 text-right"> {/* Position container */}
+        <div
+            id="google_translate_element"
+            className="inline-block p-2 bg-secondary text-secondary-foreground rounded-md shadow hover:bg-secondary/90 cursor-pointer transition-colors"
+            aria-label="Select language"
+            title="Translate this page"
+        >
+            {/* The Google Translate widget will render inside this div */}
+            {/* Applying styles here makes the container look like a button area */}
+        </div>
+    </div>
+
   );
 }
+
