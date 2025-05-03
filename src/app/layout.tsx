@@ -51,22 +51,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
       >
-          {/* Google Translate Widget Placeholder */}
-          <div id="google_translate_element" className="container mx-auto px-4 pt-4"></div>
-
           <main className="container mx-auto px-4 py-8">{children}</main>
           <Toaster /> {/* Add Toaster component */}
-
-          {/* Google Translate Initialization Scripts */}
-          {/* Note: These scripts run client-side */}
-          <script type="text/javascript">
-            {`
-              function googleTranslateElementInit() {
-                new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-              }
-            `}
-          </script>
-          <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
       </body>
     </html>
   );
