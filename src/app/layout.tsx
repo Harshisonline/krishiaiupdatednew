@@ -1,12 +1,11 @@
 
 import type { Metadata, Viewport } from 'next';
-// Correctly import the GeistSans font object
 import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 // Initialize font object - GeistSans is an object, not a function
-const geistSans = GeistSans;
+// const geistSans = GeistSans; // This was incorrect, GeistSans is imported directly
 
 export const metadata: Metadata = {
     title: "KrishiAi+ | Smart Farming Platform",
@@ -44,24 +43,11 @@ export default function RootLayout({
 
          {/* Link to manifest */}
          <link rel="manifest" href="/manifest.json" />
-
-         {/* Add Google Translate script */}
-         <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-         <script type="text/javascript">
-           {`
-             function googleTranslateElementInit() {
-               new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
-             }
-           `}
-         </script>
-
        </head>
       {/* Apply the font variable to the body */}
       <body
-        className={`${geistSans.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
+        className={`${GeistSans.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
       >
-          {/* Add the Google Translate element */}
-          <div id="google_translate_element" style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 1000 }}></div>
           <main className="container mx-auto px-4 py-8 mt-12">{children}</main> {/* Added margin-top to avoid overlap with translate widget */}
           <Toaster /> {/* Add Toaster component */}
       </body>
