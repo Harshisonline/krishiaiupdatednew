@@ -4,8 +4,10 @@ import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
-// Initialize font object
+// Initialize font object using the documented approach for Next.js App Router
+// No need to call it as a function here if using the variable approach
 const geistSans = GeistSans;
+
 
 export const metadata: Metadata = {
     title: "KrishiAi+ | Smart Farming Platform",
@@ -49,9 +51,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
       >
-          <main className="container mx-auto px-4 py-8 mt-12">{children}</main> {/* Added margin-top to avoid overlap with translate widget */}
+          {/* Google Translate Widget Placeholder */}
+          <div id="google_translate_element" className="container mx-auto px-4 pt-4"></div>
+
+          <main className="container mx-auto px-4 py-8">{children}</main>
           <Toaster /> {/* Add Toaster component */}
+
+          {/* Google Translate Initialization Scripts */}
+          {/* Note: These scripts run client-side */}
+          <script type="text/javascript">
+            {`
+              function googleTranslateElementInit() {
+                new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+              }
+            `}
+          </script>
+          <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
       </body>
     </html>
   );
 }
+
