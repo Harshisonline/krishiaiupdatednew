@@ -1,14 +1,10 @@
-
 import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
-import GoogleTranslateWidget from '@/components/google-translate-widget'; // Import the new client component
+import GoogleTranslateWidget from '@/components/google-translate-widget'; // Import the client component
 import Script from 'next/script';
-
-
-// Initialize font object using the documented approach for Next.js App Router
-const geistSans = GeistSans;
+import { cn } from "@/lib/utils"; // Import cn utility
 
 
 export const metadata: Metadata = {
@@ -32,7 +28,7 @@ export default function RootLayout({
 }) {
 
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning> {/* Added suppressHydrationWarning */}
        {/* Ensure no whitespace directly inside head */}
        <head>
          {/* Add meta tags for PWA */}
@@ -45,22 +41,32 @@ export default function RootLayout({
          <meta name="msapplication-TileColor" content="#388E3C" />
          <meta name="msapplication-tap-highlight" content="no" />
          <link rel="manifest" href="/manifest.json" />
+          {/* Preconnect to Google Translate domains */}
+          <link rel="preconnect" href="https://translate.google.com" />
+          <link rel="preconnect" href="https://translate.googleapis.com" />
          {/* Add other head elements like scripts or styles here */}
        </head>
       {/* Apply the font variable to the body */}
       <body
-        className={`${geistSans.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
+         className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          GeistSans.variable // Use the imported font object correctly
+        )}
       >
           {/* Render the Google Translate widget using the client component */}
+          {/* Ensure this component renders the necessary div#google_translate_element */}
           <GoogleTranslateWidget />
 
           <main className="container mx-auto px-4 py-8">{children}</main>
           <Toaster /> {/* Add Toaster component */}
 
-          {/* Load the Google Translate script */}
+          {/* Load the Google Translate script after the DOM is ready */}
+          {/* Using strategy="lazyOnload" defers loading until after essential resources */}
           <Script
+            id="google-translate-script" // Added an ID for clarity
             src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"
-            strategy="afterInteractive"
+            strategy="lazyOnload" // Changed strategy
+            // onError removed as it causes issues with Server Components
           />
       </body>
     </html>
