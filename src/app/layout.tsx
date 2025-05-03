@@ -1,11 +1,12 @@
 
 import type { Metadata, Viewport } from 'next';
+// Correctly import the GeistSans font object
 import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
+// Initialize font object - GeistSans is an object, not a function
 const geistSans = GeistSans;
-
 
 export const metadata: Metadata = {
     title: "KrishiAi+ | Smart Farming Platform",
@@ -15,8 +16,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#4d7c44' }, // Primary color for light mode
-    { media: '(prefers-color-scheme: dark)', color: '#639a5a' }, // Primary color for dark mode
+    { media: '(prefers-color-scheme: light)', color: '#388E3C' }, // Primary color for light mode
+    { media: '(prefers-color-scheme: dark)', color: '#4CAF50' }, // Slightly lighter green for dark mode
   ],
 }
 
@@ -38,22 +39,30 @@ export default function RootLayout({
          <meta name="format-detection" content="telephone=no" />
          <meta name="mobile-web-app-capable" content="yes" />
          {/* <meta name="msapplication-config" content="/icons/browserconfig.xml" /> */}
-         <meta name="msapplication-TileColor" content="#4d7c44" />
+         <meta name="msapplication-TileColor" content="#388E3C" /> {/* Updated tile color */}
          <meta name="msapplication-tap-highlight" content="no" />
-         {/* <link rel="apple-touch-icon" href="/icons/touch-icon-iphone.png" />
-         <link rel="apple-touch-icon" sizes="152x152" href="/icons/touch-icon-ipad.png" />
-         <link rel="apple-touch-icon" sizes="180x180" href="/icons/touch-icon-iphone-retina.png" />
-         <link rel="apple-touch-icon" sizes="167x167" href="/icons/touch-icon-ipad-retina.png" /> */}
 
-         {/* <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png" />
-         <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png" /> */}
-         {/* <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#5bbad5" /> */}
-         {/* <link rel="shortcut icon" href="/favicon.ico" /> */}
+         {/* Link to manifest */}
+         <link rel="manifest" href="/manifest.json" />
+
+         {/* Add Google Translate script */}
+         <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+         <script type="text/javascript">
+           {`
+             function googleTranslateElementInit() {
+               new google.translate.TranslateElement({pageLanguage: 'en', layout: google.translate.TranslateElement.InlineLayout.SIMPLE}, 'google_translate_element');
+             }
+           `}
+         </script>
+
        </head>
+      {/* Apply the font variable to the body */}
       <body
-        className={`${geistSans.variable} antialiased min-h-screen bg-background text-foreground`}
+        className={`${geistSans.variable} font-sans antialiased min-h-screen bg-background text-foreground`}
       >
-          <main className="container mx-auto px-4 py-8">{children}</main>
+          {/* Add the Google Translate element */}
+          <div id="google_translate_element" style={{ position: 'fixed', top: '10px', right: '10px', zIndex: 1000 }}></div>
+          <main className="container mx-auto px-4 py-8 mt-12">{children}</main> {/* Added margin-top to avoid overlap with translate widget */}
           <Toaster /> {/* Add Toaster component */}
       </body>
     </html>

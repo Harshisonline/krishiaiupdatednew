@@ -4,8 +4,8 @@
   "description": "AI-powered solutions for modern agriculture.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f1e6",
-  "theme_color": "#4d7c44",
+  "background_color": "#F5F5DC",
+  "theme_color": "#388E3C",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
