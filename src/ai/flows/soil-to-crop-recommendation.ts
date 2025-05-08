@@ -33,7 +33,7 @@ const RecommendCropsOutputSchema = z.object({
 });
 export type RecommendCropsOutput = z.infer<typeof RecommendCropsOutputSchema>;
 
-const API_URL = "https://tri-plastic-pleasant-abstracts.trycloudflare.com/predict";
+const API_URL = "https://ministers-dropped-particular-producer.trycloudflare.com//predict";
 
 // Helper function to convert data URI to Blob and guess filename
 // Copied from crop-disease-diagnosis.ts as it's a common utility for file uploads
