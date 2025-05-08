@@ -34,4 +34,3 @@ export async function predictCropYield(cropData: CropPredictionInput): Promise<C
     throw new Error(`Failed to predict crop yield: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
-```
