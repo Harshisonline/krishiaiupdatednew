@@ -6,19 +6,20 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { predictCropYield, type CropYield } from '@/services/crop-yield';
+import { predictCropYield, type CropPredictionOutput, type CropPredictionInput } from '@/services/crop-yield';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Label } from '@/components/ui/label'; // Keep if used outside RHF Form
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { CalendarIcon, Loader2, ArrowLeft } from 'lucide-react';
+import { CalendarIcon, Loader2, ArrowLeft, Info, AlertTriangleIcon, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useToast } from '@/hooks/use-toast';
 
 
 // Hardcoded English Strings
@@ -27,32 +28,36 @@ const pageStrings = {
     description: "Enter your crop details to estimate the potential yield.",
     cropTypeLabel: "Crop Type",
     cropTypePlaceholder: "e.g., Wheat, Corn, Rice",
-    locationLabel: "Location (City/Region)",
-    locationPlaceholder: "e.g., Central Valley, CA",
+    locationLabel: "Location (City/Region, Country)",
+    locationPlaceholder: "e.g., Central Valley, CA, USA",
     plantingDateLabel: "Planting Date",
     seasonLabel: "Season",
     seasonPlaceholder: "Select a season",
     pickDate: "Pick a date",
     predictButton: "Predict Yield",
     predictingButton: "Predicting...",
-    error: "Failed to predict crop yield. Please try again.",
-    resultTitle: "Predicted Yield",
-    resultUnit: "kg",
-    resultDisclaimer: "Estimated yield based on provided data. Actual results may vary.",
+    predictionFailedErrorTitle: "Prediction Failed",
+    predictionFailedErrorDescription: "Failed to predict crop yield. Please check your input or try again later.",
+    resultTitle: "Predicted Yield Analysis",
+    predictedYieldLabel: "Estimated Yield:",
+    resultUnit: "kg/ha",
+    confidenceScoreLabel: "Confidence Score:",
+    factorsConsideredLabel: "Factors Considered:",
+    potentialRisksLabel: "Potential Risks:",
+    resultDisclaimer: "This is an AI-generated estimate. Actual results may vary based on numerous real-world factors.",
     backToHome: "Back to Home"
 };
 
 const seasonOptions = [
-    { value: "Kharif", label: "Kharif (Monsoon)" },
+    { value: "Kharif", label: "Kharif (Monsoon/Summer)" },
     { value: "Rabi", label: "Rabi (Winter)" },
-    { value: "Zaid", label: "Zaid (Summer)" },
+    { value: "Zaid", label: "Zaid (Post-Winter/Pre-Monsoon)" },
     { value: "Whole Year", label: "Whole Year" },
 ];
 
-// Schema can remain in English as it's for validation logic
 const formSchema = z.object({
   cropType: z.string().min(2, { message: 'Crop type must be at least 2 characters.' }),
-  location: z.string().min(3, { message: 'Location must be at least 3 characters.' }),
+  location: z.string().min(3, { message: 'Location must be at least 3 characters (e.g., City, Country).' }),
   plantingDate: z.date({ required_error: 'Planting date is required.' }),
   season: z.string().min(1, { message: 'Season is required.' }),
 });
@@ -65,7 +70,8 @@ const LoadingSpinner: FC = () => (
   </div>
 );
 
-const ResultCard: FC<{ result: CropYield }> = ({ result }) => {
+const ResultCard: FC<{ result: CropPredictionOutput }> = ({ result }) => {
+  const confidencePercentage = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) + "%" : "N/A";
   return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -73,17 +79,53 @@ const ResultCard: FC<{ result: CropYield }> = ({ result }) => {
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
       >
-        <Card className="mt-6 bg-secondary text-secondary-foreground shadow-md">
+        <Card className="mt-6 bg-card text-card-foreground shadow-xl border border-primary/20">
           <CardHeader>
-            <CardTitle>{pageStrings.resultTitle}</CardTitle>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-6 w-6 text-primary" />
+              <CardTitle className="text-xl text-primary">{pageStrings.resultTitle}</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-primary">
-              {result.predictedYieldKg.toLocaleString()} {pageStrings.resultUnit}
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              {pageStrings.resultDisclaimer}
-            </p>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground">{pageStrings.predictedYieldLabel}</p>
+              <p className="text-3xl font-bold text-primary">
+                {result.predictedYieldKg.toLocaleString()} {pageStrings.resultUnit}
+              </p>
+            </div>
+
+            {result.confidenceScore !== undefined && (
+              <div>
+                <p className="text-sm font-semibold text-muted-foreground">{pageStrings.confidenceScoreLabel}</p>
+                <p className="text-lg text-foreground">{confidencePercentage}</p>
+              </div>
+            )}
+
+            {result.factorsConsidered && result.factorsConsidered.length > 0 && (
+              <div>
+                <p className="text-sm font-semibold text-muted-foreground">{pageStrings.factorsConsideredLabel}</p>
+                <ul className="list-disc list-inside text-sm text-foreground space-y-1 pl-2">
+                  {result.factorsConsidered.map((factor, index) => <li key={index}>{factor}</li>)}
+                </ul>
+              </div>
+            )}
+
+            {result.potentialRisks && result.potentialRisks.length > 0 && (
+              <div>
+                <p className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
+                  <AlertTriangleIcon className="h-4 w-4 text-destructive" />
+                  {pageStrings.potentialRisksLabel}
+                </p>
+                <ul className="list-disc list-inside text-sm text-destructive/90 space-y-1 pl-2">
+                  {result.potentialRisks.map((risk, index) => <li key={index}>{risk}</li>)}
+                </ul>
+              </div>
+            )}
+            
+            <div className="flex items-start gap-2 text-xs text-muted-foreground pt-3 border-t border-border mt-4">
+              <Info className="h-4 w-4 mt-0.5 shrink-0"/>
+              <p>{pageStrings.resultDisclaimer}</p>
+            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -93,8 +135,8 @@ const ResultCard: FC<{ result: CropYield }> = ({ result }) => {
 
 const CropYieldPage: FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<CropYield | null>(null);
+  const [result, setResult] = useState<CropPredictionOutput | null>(null);
+  const { toast } = useToast();
 
   const form = useForm<CropYieldFormValues>({
     resolver: zodResolver(formSchema),
@@ -108,18 +150,24 @@ const CropYieldPage: FC = () => {
 
   const onSubmit = async (values: CropYieldFormValues) => {
     setLoading(true);
-    setError(null);
     setResult(null);
+
+    const inputData: CropPredictionInput = {
+      ...values,
+      plantingDate: format(values.plantingDate, 'yyyy-MM-dd'),
+    };
+
     try {
-      const formattedData = {
-        ...values,
-        plantingDate: format(values.plantingDate, 'yyyy-MM-dd'), // Format date for API
-      };
-      const prediction = await predictCropYield(formattedData);
+      const prediction = await predictCropYield(inputData);
       setResult(prediction);
     } catch (err) {
       console.error('Error predicting crop yield:', err);
-      setError(pageStrings.error);
+      const message = err instanceof Error ? err.message : pageStrings.predictionFailedErrorDescription;
+      toast({
+        title: pageStrings.predictionFailedErrorTitle,
+        description: message,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -231,24 +279,22 @@ const CropYieldPage: FC = () => {
                 )}
               />
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" disabled={loading}>
-                {loading ? pageStrings.predictingButton : pageStrings.predictButton}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {pageStrings.predictingButton}
+                  </>
+                ) : (
+                  pageStrings.predictButton
+                )}
               </Button>
             </form>
           </Form>
 
           <AnimatePresence>
             {loading && <LoadingSpinner />}
-            {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="mt-4 text-center text-destructive"
-              >
-                {error}
-              </motion.p>
-            )}
-            {result && <ResultCard result={result} />}
+            {/* Error display removed as it's handled by toast now */}
+            {result && !loading && <ResultCard result={result} />}
           </AnimatePresence>
         </CardContent>
       </Card>

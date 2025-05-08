@@ -1,56 +1,35 @@
+import type { PredictCropYieldInput, PredictCropYieldOutput } from '@/ai/flows/crop-yield-prediction';
+import { predictCropYield as predictCropYieldFlow } from '@/ai/flows/crop-yield-prediction';
+
 /**
  * Represents the data required for crop yield prediction.
+ * This type aligns with the input schema of the Genkit flow.
  */
-export interface CropData {
-  /**
-   * The type of crop.
-   */
-  cropType: string;
-  /**
-   * The location where the crop is planted.
-   */
-  location: string;
-  /**
-   * The planting date of the crop.
-   */
-  plantingDate: string;
-  /**
-   * The agricultural season.
-   */
-  season: string;
-}
+export type CropPredictionInput = PredictCropYieldInput;
 
 /**
- * Represents the predicted crop yield.
+ * Represents the predicted crop yield and related information.
+ * This type aligns with the output schema of the Genkit flow.
  */
-export interface CropYield {
-  /**
-   * The predicted yield in kilograms.
-   */
-  predictedYieldKg: number;
-}
+export type CropPredictionOutput = PredictCropYieldOutput;
+
 
 /**
- * Asynchronously predicts the crop yield based on the provided data.
+ * Asynchronously predicts the crop yield based on the provided data using a Genkit AI flow.
  *
  * @param cropData The data required for crop yield prediction.
- * @returns A promise that resolves to a CropYield object containing the predicted yield.
+ * @returns A promise that resolves to a CropPredictionOutput object containing the predicted yield and other details.
  */
-export async function predictCropYield(cropData: CropData): Promise<CropYield> {
-  // TODO: Implement this by calling an API.
-  // For now, this includes a placeholder that incorporates the season if needed.
-  console.log('Predicting yield for:', cropData);
-
-  // Example: if season is Rabi, yield might be higher for certain crops.
-  // This is a mock, actual logic would be in the backend.
-  let baseYield = 5000;
-  if (cropData.season === 'Rabi') {
-    baseYield += 1000;
-  } else if (cropData.season === 'Kharif') {
-    baseYield += 500;
+export async function predictCropYield(cropData: CropPredictionInput): Promise<CropPredictionOutput> {
+  console.log('Requesting yield prediction for:', cropData);
+  try {
+    const result = await predictCropYieldFlow(cropData);
+    console.log('Yield prediction result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error calling predictCropYieldFlow:', error);
+    // Fallback or re-throw, depending on desired error handling strategy
+    // For now, re-throwing to let the UI handle it.
+    throw new Error(`Failed to predict crop yield: ${error instanceof Error ? error.message : String(error)}`);
   }
-
-  return {
-    predictedYieldKg: baseYield,
-  };
 }
