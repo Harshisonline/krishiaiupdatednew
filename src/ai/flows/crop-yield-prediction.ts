@@ -70,12 +70,8 @@ const predictCropYieldGenkitFlow = ai.defineFlow(
     if (!output) {
       throw new Error('Crop yield prediction failed to return an output.');
     }
-    // Ensure predictedYieldKgPerHa is a positive number, if not, set to a default or handle error.
-    if (output.predictedYieldKgPerHa < 0) {
-        // This could be an indication of a very poor yield or an error in prediction.
-        // For now, let's log and allow it, but in a real app, might cap at 0 or re-evaluate.
-        console.warn(`Predicted yield for ${input.cropType} at ${input.location} is negative: ${output.predictedYieldKgPerHa} kg/ha. This may indicate very unfavorable conditions or a prediction anomaly.`);
-    }
+    // Return the AI's output directly without additional logic
     return output;
   }
 );
+
