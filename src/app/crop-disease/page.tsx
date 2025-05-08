@@ -10,12 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Upload, X, ArrowLeft, Info, Sparkles, Percent } from 'lucide-react'; // Replaced icons
+import { Loader2, Upload, X, ArrowLeft, Info, Sparkles, Percent } from 'lucide-react'; 
 import Image from 'next/image';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
-// Hardcoded English Strings - Adjusted for new API response display
+// Hardcoded English Strings
 const pageStrings = {
     title: "Crop Disease Detection",
     description: "Upload a photo of your crop to identify potential diseases using our AI model.",
@@ -37,9 +37,9 @@ const pageStrings = {
     resultTitle: "Diagnosis Result", 
     confidenceLabel: "Confidence Score",
     predictedClassLabel: "Predicted Disease/Class",
-    apiRawResponseTitle: "Raw API Response",
+    // apiRawResponseTitle: "Raw API Response", // Removed as per request
     backToHome: "Back to Home",
-    processingError: "Could not process the API response. Please check the console for details.",
+    processingError: "Could not process the API response. The format might be unexpected.",
 };
 
 const LoadingSpinner: FC = () => (
@@ -116,6 +116,7 @@ const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) =>
             </CardContent>
         </Card>
         
+        {/* Raw API Response Display Removed 
         <Alert variant="default" className="bg-muted/50 text-muted-foreground shadow-sm">
             <div className="flex items-center gap-2">
                 <Info className="h-5 w-5 text-foreground" />
@@ -128,7 +129,8 @@ const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) =>
                     {JSON.stringify(result.api_response, null, 2)}
                 </pre>
             </AlertDescription>
-        </Alert>
+        </Alert> 
+        */}
     </motion.div>
   );
 };
