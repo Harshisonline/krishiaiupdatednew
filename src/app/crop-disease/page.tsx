@@ -9,15 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Upload, X, CheckCircle, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { Loader2, Upload, X, ArrowLeft, Info } from 'lucide-react'; // Replaced icons
 import Image from 'next/image';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
-// Hardcoded English Strings
+// Hardcoded English Strings - Adjusted for new API response display
 const pageStrings = {
     title: "Crop Disease Detection",
-    description: "Upload a photo of your crop to identify potential diseases.",
+    description: "Upload a photo of your crop to identify potential diseases using our AI model.",
     uploadLabel: "Upload Crop Photo",
     uploadHint: "Upload an image (JPG, PNG, WEBP, max 5MB).",
     selectImageLabel: "Select Image",
@@ -33,12 +33,7 @@ const pageStrings = {
     diagnosisFailedErrorTitle: "Diagnosis Failed",
     diagnosisFailedErrorDescription: "Failed to diagnose crop disease. Please check the image or try again.",
     invalidImageDataError: "Invalid image data format.",
-    resultTitleDisease: "Disease Detected: {diseaseName}", // Placeholder for dynamic name
-    resultTitleUnknownDisease: "Disease Detected: Unknown Disease",
-    resultTitleNoDisease: "No Disease Detected",
-    resultNoteNotPlant: "Note: The uploaded image does not appear to be a plant.",
-    resultRecommendationsHeading: "Treatment Recommendations:",
-    resultHealthyMessage: "The analysis indicates the plant appears healthy.",
+    resultTitle: "Diagnosis API Response", // Generic title for API response
     backToHome: "Back to Home"
 };
 
@@ -49,9 +44,6 @@ const LoadingSpinner: FC = () => (
 );
 
 const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) => {
-  const diseaseName = result.diseaseName || pageStrings.resultTitleUnknownDisease.split(': ')[1]; // Extract default name if none provided
-  const title = result.hasDisease ? pageStrings.resultTitleDisease.replace('{diseaseName}', diseaseName) : pageStrings.resultTitleNoDisease;
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -60,24 +52,18 @@ const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) =>
       transition={{ duration: 0.3 }}
       className="mt-6"
     >
-      <Alert variant={result.hasDisease ? "destructive" : "default"} className="bg-secondary text-secondary-foreground shadow-md">
+      <Alert variant="default" className="bg-secondary text-secondary-foreground shadow-md">
          <div className="flex items-center gap-2">
-           {result.hasDisease ? <AlertTriangle className="h-5 w-5 text-destructive" /> : <CheckCircle className="h-5 w-5 text-primary" />}
+           <Info className="h-5 w-5 text-primary" />
            <AlertTitle className="font-bold">
-             {title}
+             {pageStrings.resultTitle}
            </AlertTitle>
          </div>
         <AlertDescription className="mt-2">
-          {!result.isPlant && <p className="mb-2 font-medium">{pageStrings.resultNoteNotPlant}</p>}
-          {result.hasDisease && result.treatmentRecommendations && (
-            <div>
-              <h4 className="font-semibold mt-3 mb-1 text-foreground">{pageStrings.resultRecommendationsHeading}</h4>
-              <p>{result.treatmentRecommendations}</p>
-            </div>
-          )}
-          {!result.hasDisease && result.isPlant && (
-             <p>{pageStrings.resultHealthyMessage}</p>
-          )}
+            <p className="mb-2 font-medium">The backend API returned the following information:</p>
+            <pre className="p-2 bg-muted text-muted-foreground rounded-md overflow-x-auto text-sm">
+                {JSON.stringify(result.api_response, null, 2)}
+            </pre>
         </AlertDescription>
       </Alert>
     </motion.div>
@@ -87,7 +73,7 @@ const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) =>
 
 const CropDiseasePage: FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null); // Keep internal error state if needed for logic, but rely on toast for display
+  // const [error, setError] = useState<string | null>(null); // Keep internal error state if needed for logic, but rely on toast for display
   const [result, setResult] = useState<DiagnoseCropDiseaseOutput | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -98,7 +84,6 @@ const CropDiseasePage: FC = () => {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Validate file type and size if necessary
       if (!file.type.startsWith('image/')) {
         toast({
           title: pageStrings.invalidFileTypeErrorTitle,
@@ -107,7 +92,6 @@ const CropDiseasePage: FC = () => {
         });
         return;
       }
-       // Max 5MB size validation
       const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
          toast({
@@ -119,8 +103,8 @@ const CropDiseasePage: FC = () => {
       }
 
       setSelectedFile(file);
-      setResult(null); // Clear previous results
-      setError(null); // Clear previous errors
+      setResult(null); 
+      // setError(null); 
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -134,9 +118,9 @@ const CropDiseasePage: FC = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setResult(null);
-    setError(null);
+    // setError(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Reset file input
+      fileInputRef.current.value = ''; 
     }
   };
 
@@ -151,11 +135,10 @@ const CropDiseasePage: FC = () => {
     }
 
     setLoading(true);
-    setError(null);
+    // setError(null);
     setResult(null);
 
     try {
-      // Ensure previewUrl is a valid data URI string
       if (typeof previewUrl !== 'string' || !previewUrl.startsWith('data:image/')) {
          throw new Error(pageStrings.invalidImageDataError);
       }
@@ -164,7 +147,7 @@ const CropDiseasePage: FC = () => {
     } catch (err) {
       console.error('Error diagnosing crop disease:', err);
       const message = err instanceof Error ? err.message : pageStrings.diagnosisFailedErrorDescription;
-      setError(message); // Set internal error state if needed
+      // setError(message); 
        toast({
           title: pageStrings.diagnosisFailedErrorTitle,
           description: message,
@@ -229,6 +212,7 @@ const CropDiseasePage: FC = () => {
                   width={400}
                   height={300}
                   className="rounded-md object-contain max-h-[300px] w-full"
+                  data-ai-hint="crop disease"
                 />
               </motion.div>
             )}
@@ -238,14 +222,20 @@ const CropDiseasePage: FC = () => {
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={loading || !selectedFile}
             >
-              {loading ? pageStrings.diagnosingButton : pageStrings.diagnoseButton}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {pageStrings.diagnosingButton}
+                </>
+              ) : (
+                pageStrings.diagnoseButton
+              )}
             </Button>
           </div>
 
           <AnimatePresence>
             {loading && <LoadingSpinner />}
-             {/* Error display removed as it's handled by toast now */}
-            {result && <ResultDisplay result={result} />}
+            {result && !loading && <ResultDisplay result={result} />}
           </AnimatePresence>
         </CardContent>
       </Card>

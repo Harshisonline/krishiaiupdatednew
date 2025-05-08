@@ -1,13 +1,12 @@
 'use server';
 /**
- * @fileOverview A crop disease diagnosis AI agent.
+ * @fileOverview A crop disease diagnosis agent using an external API.
  *
- * - diagnoseCropDisease - A function that handles the crop disease diagnosis process.
+ * - diagnoseCropDisease - A function that handles the crop disease diagnosis process by calling an external API.
  * - DiagnoseCropDiseaseInput - The input type for the diagnoseCropDisease function.
  * - DiagnoseCropDiseaseOutput - The return type for the diagnoseCropDisease function.
  */
 
-import {ai} from '@/ai/ai-instance';
 import {z} from 'genkit';
 
 const DiagnoseCropDiseaseInputSchema = z.object({
@@ -19,54 +18,46 @@ const DiagnoseCropDiseaseInputSchema = z.object({
 });
 export type DiagnoseCropDiseaseInput = z.infer<typeof DiagnoseCropDiseaseInputSchema>;
 
+// Schema to hold the raw response from the backend API
 const DiagnoseCropDiseaseOutputSchema = z.object({
-  isPlant: z.boolean().describe('Whether or not the input is a plant.'),
-  hasDisease: z.boolean().describe('Whether or not the plant has a disease.'),
-  diseaseName: z.string().describe('The name of the disease, if any.').optional(),
-  treatmentRecommendations: z.string().describe('Treatment recommendations for the disease, if any.').optional(),
+  api_response: z.any().describe("The raw JSON response from the backend disease prediction API."),
 });
 export type DiagnoseCropDiseaseOutput = z.infer<typeof DiagnoseCropDiseaseOutputSchema>;
 
+const API_URL = "https://investing-continuously-calculator-emerald.trycloudflare.com/predict";
+
 export async function diagnoseCropDisease(input: DiagnoseCropDiseaseInput): Promise<DiagnoseCropDiseaseOutput> {
-  return diagnoseCropDiseaseFlow(input);
-}
+  console.log('[diagnoseCropDisease] Calling external API for disease diagnosis.');
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ photoDataUri: input.photoDataUri }), // Assuming API expects this field name
+    });
 
-const prompt = ai.definePrompt({
-  name: 'diagnoseCropDiseasePrompt',
-  input: {
-    schema: z.object({
-      photoDataUri: z
-        .string()
-        .describe(
-          "A photo of a crop, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
-        ),
-    }),
-  },
-  output: {
-    schema: z.object({
-      isPlant: z.boolean().describe('Whether or not the input is a plant.'),
-      hasDisease: z.boolean().describe('Whether or not the plant has a disease.'),
-      diseaseName: z.string().describe('The name of the disease, if any.').optional(),
-      treatmentRecommendations: z.string().describe('Treatment recommendations for the disease, if any.').optional(),
-    }),
-  },
-  prompt: `You are an expert in diagnosing crop diseases. Analyze the image and determine if it is a plant, whether it has a disease, and suggest treatments if necessary.
+    if (!response.ok) {
+      let errorBody = 'No additional error information from API.';
+      try {
+        errorBody = await response.text();
+      } catch (e) {
+        // Ignore if error body cannot be read
+      }
+      console.error(`[diagnoseCropDisease] API request failed: ${response.status} ${response.statusText}`, errorBody);
+      throw new Error(`API request failed with status ${response.status}: ${errorBody}`);
+    }
 
-Analyze the following image:
-{{media url=photoDataUri}}`,
-});
+    const resultJson = await response.json();
+    console.log('[diagnoseCropDisease] API response received:', resultJson);
+    
+    return { api_response: resultJson };
 
-const diagnoseCropDiseaseFlow = ai.defineFlow<
-  typeof DiagnoseCropDiseaseInputSchema,
-  typeof DiagnoseCropDiseaseOutputSchema
->(
-  {
-    name: 'diagnoseCropDiseaseFlow',
-    inputSchema: DiagnoseCropDiseaseInputSchema,
-    outputSchema: DiagnoseCropDiseaseOutputSchema,
-  },
-  async input => {
-    const {output} = await prompt(input);
-    return output!;
+  } catch (error) {
+    console.error('[diagnoseCropDisease] Error calling external API:', error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to diagnose crop disease via external API: ${error.message}`);
+    }
+    throw new Error('An unknown error occurred during crop disease diagnosis via external API.');
   }
-);
+}
