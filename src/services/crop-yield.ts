@@ -14,6 +14,10 @@ export interface CropData {
    * The planting date of the crop.
    */
   plantingDate: string;
+  /**
+   * The agricultural season.
+   */
+  season: string;
 }
 
 /**
@@ -34,8 +38,19 @@ export interface CropYield {
  */
 export async function predictCropYield(cropData: CropData): Promise<CropYield> {
   // TODO: Implement this by calling an API.
+  // For now, this includes a placeholder that incorporates the season if needed.
+  console.log('Predicting yield for:', cropData);
+
+  // Example: if season is Rabi, yield might be higher for certain crops.
+  // This is a mock, actual logic would be in the backend.
+  let baseYield = 5000;
+  if (cropData.season === 'Rabi') {
+    baseYield += 1000;
+  } else if (cropData.season === 'Kharif') {
+    baseYield += 500;
+  }
 
   return {
-    predictedYieldKg: 5000,
+    predictedYieldKg: baseYield,
   };
 }

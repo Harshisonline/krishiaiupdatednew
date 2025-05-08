@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2, ArrowLeft } from 'lucide-react';
@@ -29,6 +30,8 @@ const pageStrings = {
     locationLabel: "Location (City/Region)",
     locationPlaceholder: "e.g., Central Valley, CA",
     plantingDateLabel: "Planting Date",
+    seasonLabel: "Season",
+    seasonPlaceholder: "Select a season",
     pickDate: "Pick a date",
     predictButton: "Predict Yield",
     predictingButton: "Predicting...",
@@ -39,11 +42,19 @@ const pageStrings = {
     backToHome: "Back to Home"
 };
 
+const seasonOptions = [
+    { value: "Kharif", label: "Kharif (Monsoon)" },
+    { value: "Rabi", label: "Rabi (Winter)" },
+    { value: "Zaid", label: "Zaid (Summer)" },
+    { value: "Whole Year", label: "Whole Year" },
+];
+
 // Schema can remain in English as it's for validation logic
 const formSchema = z.object({
   cropType: z.string().min(2, { message: 'Crop type must be at least 2 characters.' }),
   location: z.string().min(3, { message: 'Location must be at least 3 characters.' }),
   plantingDate: z.date({ required_error: 'Planting date is required.' }),
+  season: z.string().min(1, { message: 'Season is required.' }),
 });
 
 type CropYieldFormValues = z.infer<typeof formSchema>;
@@ -91,6 +102,7 @@ const CropYieldPage: FC = () => {
       cropType: '',
       location: '',
       plantingDate: undefined,
+      season: '',
     },
   });
 
@@ -190,6 +202,30 @@ const CropYieldPage: FC = () => {
                         />
                       </PopoverContent>
                     </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="season"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{pageStrings.seasonLabel}</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder={pageStrings.seasonPlaceholder} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {seasonOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
