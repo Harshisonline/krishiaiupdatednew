@@ -21,7 +21,7 @@ export type RecommendCropsInput = z.infer<typeof RecommendCropsInputSchema>;
 // Schema for the direct API response structure
 const ApiSoilResponseSchema = z.object({
     soil_type: z.string().describe('The type of soil detected by the API.'),
-    recommended_crops: z.array(z.string()).describe('A list of crops recommended by the API for the detected soil type.')
+    recommended_crops: z.array(z.string()).optional().describe('A list of crops recommended by the API for the detected soil type.')
 });
 
 // Schema for the output structure expected by the frontend
@@ -121,7 +121,7 @@ export async function recommendCrops(input: RecommendCropsInput): Promise<Recomm
     // Map to the output schema expected by the frontend
     return {
       soilType: parsedApiResult.data.soil_type,
-      recommendedCrops: parsedApiResult.data.recommended_crops,
+      recommendedCrops: parsedApiResult.data.recommended_crops || [],
     };
 
   } catch (error) {
