@@ -10,6 +10,7 @@ export type CropPredictionInput = PredictCropYieldInput;
 /**
  * Represents the predicted crop yield and related information.
  * This type aligns with the output schema of the Genkit flow.
+ * Note: predictedYieldKgPerHa is the yield in kg per hectare.
  */
 export type CropPredictionOutput = PredictCropYieldOutput;
 
@@ -18,7 +19,7 @@ export type CropPredictionOutput = PredictCropYieldOutput;
  * Asynchronously predicts the crop yield based on the provided data using a Genkit AI flow.
  *
  * @param cropData The data required for crop yield prediction.
- * @returns A promise that resolves to a CropPredictionOutput object containing the predicted yield and other details.
+ * @returns A promise that resolves to a CropPredictionOutput object containing the predicted yield (kg/ha) and other details.
  */
 export async function predictCropYield(cropData: CropPredictionInput): Promise<CropPredictionOutput> {
   console.log('Requesting yield prediction for:', cropData);
@@ -33,3 +34,4 @@ export async function predictCropYield(cropData: CropPredictionInput): Promise<C
     throw new Error(`Failed to predict crop yield: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
+```

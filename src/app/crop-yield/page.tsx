@@ -33,6 +33,8 @@ const pageStrings = {
     plantingDateLabel: "Planting Date",
     seasonLabel: "Season",
     seasonPlaceholder: "Select a season",
+    landAreaLabel: "Land Area (Hectares)",
+    landAreaPlaceholder: "e.g., 2.5",
     pickDate: "Pick a date",
     predictButton: "Predict Yield",
     predictingButton: "Predicting...",
@@ -60,6 +62,7 @@ const formSchema = z.object({
   location: z.string().min(3, { message: 'Location must be at least 3 characters (e.g., City, Country).' }),
   plantingDate: z.date({ required_error: 'Planting date is required.' }),
   season: z.string().min(1, { message: 'Season is required.' }),
+  landAreaHectares: z.coerce.number().min(0.01, { message: 'Land area must be a positive number greater than 0.' }),
 });
 
 type CropYieldFormValues = z.infer<typeof formSchema>;
@@ -90,7 +93,7 @@ const ResultCard: FC<{ result: CropPredictionOutput }> = ({ result }) => {
             <div>
               <p className="text-sm font-semibold text-muted-foreground">{pageStrings.predictedYieldLabel}</p>
               <p className="text-3xl font-bold text-primary">
-                {result.predictedYieldKg.toLocaleString()} {pageStrings.resultUnit}
+                {result.predictedYieldKgPerHa.toLocaleString()} {pageStrings.resultUnit}
               </p>
             </div>
 
@@ -145,6 +148,7 @@ const CropYieldPage: FC = () => {
       location: '',
       plantingDate: undefined,
       season: '',
+      landAreaHectares: undefined,
     },
   });
 
@@ -155,6 +159,7 @@ const CropYieldPage: FC = () => {
     const inputData: CropPredictionInput = {
       ...values,
       plantingDate: format(values.plantingDate, 'yyyy-MM-dd'),
+      landAreaHectares: Number(values.landAreaHectares) // Ensure it's a number
     };
 
     try {
@@ -208,6 +213,19 @@ const CropYieldPage: FC = () => {
                     <FormLabel>{pageStrings.locationLabel}</FormLabel>
                     <FormControl>
                       <Input placeholder={pageStrings.locationPlaceholder} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+               <FormField
+                control={form.control}
+                name="landAreaHectares"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{pageStrings.landAreaLabel}</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder={pageStrings.landAreaPlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -303,3 +321,4 @@ const CropYieldPage: FC = () => {
 };
 
 export default CropYieldPage;
+```
