@@ -1,3 +1,4 @@
+
 import type { PredictCropYieldInput, PredictCropYieldOutput } from '@/ai/flows/crop-yield-prediction';
 
 /**
@@ -22,7 +23,7 @@ export type CropPredictionOutput = PredictCropYieldOutput;
  */
 export async function predictCropYield(cropData: CropPredictionInput): Promise<CropPredictionOutput> {
   console.log('Requesting yield prediction from external API for:', cropData);
-  const apiUrl = "https://supplies-recycling-appear-vintage.trycloudflare.com/predict";
+  const apiUrl = "https://mental-hopkins-armor-feb.trycloudflare.com/predict";
 
   try {
     const response = await fetch(apiUrl, {
@@ -59,3 +60,4 @@ export async function predictCropYield(cropData: CropPredictionInput): Promise<C
     throw new Error(`Failed to get crop yield prediction from the external service. Please try again. Details: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
+
