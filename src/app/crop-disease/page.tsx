@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { FC } from 'react';
@@ -9,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Upload, X, ArrowLeft, Info } from 'lucide-react'; // Replaced icons
+import { Loader2, Upload, X, ArrowLeft, Info, Sparkles, Percent } from 'lucide-react'; // Replaced icons
 import Image from 'next/image';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
@@ -33,8 +34,12 @@ const pageStrings = {
     diagnosisFailedErrorTitle: "Diagnosis Failed",
     diagnosisFailedErrorDescription: "Failed to diagnose crop disease. Please check the image or try again.",
     invalidImageDataError: "Invalid image data format.",
-    resultTitle: "Diagnosis API Response", // Generic title for API response
-    backToHome: "Back to Home"
+    resultTitle: "Diagnosis Result", 
+    confidenceLabel: "Confidence Score",
+    predictedClassLabel: "Predicted Disease/Class",
+    apiRawResponseTitle: "Raw API Response",
+    backToHome: "Back to Home",
+    processingError: "Could not process the API response. Please check the console for details.",
 };
 
 const LoadingSpinner: FC = () => (
@@ -44,28 +49,86 @@ const LoadingSpinner: FC = () => (
 );
 
 const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) => {
+  let confidence: number | undefined;
+  let predictedClass: string | undefined;
+  let displayError: string | null = null;
+
+  if (result.api_response && typeof result.api_response === 'object') {
+    const apiResponse = result.api_response as any;
+    if (typeof apiResponse.confidence === 'number') {
+      confidence = parseFloat(apiResponse.confidence.toFixed(2));
+    }
+    if (typeof apiResponse.predicted_class === 'string') {
+      predictedClass = apiResponse.predicted_class.replace(/_/g, ' '); // Replace underscores with spaces
+    }
+
+    if (confidence === undefined || predictedClass === undefined) {
+        console.warn("API response is missing expected fields 'confidence' or 'predicted_class'.", result.api_response);
+        displayError = pageStrings.processingError;
+    }
+  } else {
+     console.warn("API response is not in the expected object format.", result.api_response);
+     displayError = pageStrings.processingError;
+  }
+
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       transition={{ duration: 0.3 }}
-      className="mt-6"
+      className="mt-6 space-y-4"
     >
-      <Alert variant="default" className="bg-secondary text-secondary-foreground shadow-md">
-         <div className="flex items-center gap-2">
-           <Info className="h-5 w-5 text-primary" />
-           <AlertTitle className="font-bold">
-             {pageStrings.resultTitle}
-           </AlertTitle>
-         </div>
-        <AlertDescription className="mt-2">
-            <p className="mb-2 font-medium">The backend API returned the following information:</p>
-            <pre className="p-2 bg-muted text-muted-foreground rounded-md overflow-x-auto text-sm">
-                {JSON.stringify(result.api_response, null, 2)}
-            </pre>
-        </AlertDescription>
-      </Alert>
+        <Card className="bg-secondary text-secondary-foreground shadow-md">
+            <CardHeader>
+                <div className="flex items-center gap-2">
+                    <Sparkles className="h-6 w-6 text-primary" />
+                    <CardTitle>{pageStrings.resultTitle}</CardTitle>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+                {displayError ? (
+                     <Alert variant="destructive">
+                        <Info className="h-4 w-4" />
+                        <AlertTitle>Error Processing Response</AlertTitle>
+                        <AlertDescription>{displayError}</AlertDescription>
+                    </Alert>
+                ) : (
+                    <>
+                        {predictedClass !== undefined && (
+                            <div>
+                                <h4 className="font-semibold text-sm text-muted-foreground">{pageStrings.predictedClassLabel}</h4>
+                                <p className="text-lg font-medium text-primary">{predictedClass}</p>
+                            </div>
+                        )}
+                        {confidence !== undefined && (
+                             <div className="flex items-center">
+                                <Percent className="h-4 w-4 mr-2 text-primary" />
+                                <div>
+                                    <h4 className="font-semibold text-sm text-muted-foreground">{pageStrings.confidenceLabel}</h4>
+                                    <p className="text-lg font-medium text-primary">{confidence}%</p>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </CardContent>
+        </Card>
+        
+        <Alert variant="default" className="bg-muted/50 text-muted-foreground shadow-sm">
+            <div className="flex items-center gap-2">
+                <Info className="h-5 w-5 text-foreground" />
+                <AlertTitle className="font-semibold text-foreground">
+                    {pageStrings.apiRawResponseTitle}
+                </AlertTitle>
+            </div>
+            <AlertDescription className="mt-2">
+                <pre className="p-2 bg-background/50 text-foreground rounded-md overflow-x-auto text-xs">
+                    {JSON.stringify(result.api_response, null, 2)}
+                </pre>
+            </AlertDescription>
+        </Alert>
     </motion.div>
   );
 };
@@ -73,7 +136,6 @@ const ResultDisplay: FC<{ result: DiagnoseCropDiseaseOutput }> = ({ result }) =>
 
 const CropDiseasePage: FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  // const [error, setError] = useState<string | null>(null); // Keep internal error state if needed for logic, but rely on toast for display
   const [result, setResult] = useState<DiagnoseCropDiseaseOutput | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -104,7 +166,6 @@ const CropDiseasePage: FC = () => {
 
       setSelectedFile(file);
       setResult(null); 
-      // setError(null); 
 
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -118,7 +179,6 @@ const CropDiseasePage: FC = () => {
     setSelectedFile(null);
     setPreviewUrl(null);
     setResult(null);
-    // setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = ''; 
     }
@@ -135,7 +195,6 @@ const CropDiseasePage: FC = () => {
     }
 
     setLoading(true);
-    // setError(null);
     setResult(null);
 
     try {
@@ -147,7 +206,6 @@ const CropDiseasePage: FC = () => {
     } catch (err) {
       console.error('Error diagnosing crop disease:', err);
       const message = err instanceof Error ? err.message : pageStrings.diagnosisFailedErrorDescription;
-      // setError(message); 
        toast({
           title: pageStrings.diagnosisFailedErrorTitle,
           description: message,
@@ -244,3 +302,4 @@ const CropDiseasePage: FC = () => {
 };
 
 export default CropDiseasePage;
+
