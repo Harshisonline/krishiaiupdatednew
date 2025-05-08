@@ -79,4 +79,3 @@ const predictCropYieldGenkitFlow = ai.defineFlow(
     return output;
   }
 );
-```
