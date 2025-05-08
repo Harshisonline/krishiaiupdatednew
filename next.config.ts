@@ -5,8 +5,8 @@ import withPWAInit from 'next-pwa';
 const withPWA = withPWAInit({
   dest: 'public',
   disable: process.env.NODE_ENV === 'development',
-  // register: true, // Auto-register service worker
-  // skipWaiting: true, // Install new service worker when available without waiting
+  register: true, // Auto-register service worker
+  skipWaiting: true, // Install new service worker when available without waiting
   // Note: To test PWA features like the install prompt locally,
   // you generally need to build the production version (`npm run build`)
   // and then start the production server (`npm run start`).
