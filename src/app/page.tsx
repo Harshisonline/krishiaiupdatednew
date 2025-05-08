@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Leaf, Microscope, Sprout, Handshake } from 'lucide-react'; // Using relevant icons, added Handshake
+import { Leaf, Microscope, Sprout, Handshake, CloudSun } from 'lucide-react'; // Using relevant icons, added Handshake and CloudSun
 
 
 export default function Home() {
@@ -36,6 +36,12 @@ export default function Home() {
       description: "Explore beneficial government schemes for farmers and agriculture.",
       icon: Handshake, // New icon for schemes
       href: '/government-schemes',
+    },
+    {
+      title: "Weather Forecast",
+      description: "Check the latest weather conditions and forecasts for your area.",
+      icon: CloudSun,
+      href: '/weather',
     },
   ];
 
@@ -94,7 +100,7 @@ export default function Home() {
         </Link>
       </motion.div>
 
-      <div id="features" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-6xl"> {/* Changed to lg:grid-cols-4 and max-w-6xl */}
+      <div id="features" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl">
         {features.map((feature, index) => (
           <motion.div
             key={feature.title}
