@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { motion, AnimatePresence } from 'framer-motion';
-import { predictCropYield, type CropPredictionOutput, type CropPredictionInput } from '@/services/crop-yield';
+import { predictCropYield, type PredictCropYieldOutput, type PredictCropYieldInput } from '@/ai/flows/crop-yield-prediction';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -46,7 +46,6 @@ const pageStrings = {
     confidenceScoreLabel: "Confidence Score:",
     factorsConsideredLabel: "Factors Considered:",
     potentialRisksLabel: "Potential Risks:",
-    resultDisclaimer: "This is an AI-generated estimate. Actual results may vary based on numerous real-world factors.",
     backToHome: "Back to Home"
 };
 
@@ -73,7 +72,7 @@ const LoadingSpinner: FC = () => (
   </div>
 );
 
-const ResultCard: FC<{ result: CropPredictionOutput }> = ({ result }) => {
+const ResultCard: FC<{ result: PredictCropYieldOutput }> = ({ result }) => {
   const confidencePercentage = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) + "%" : "N/A";
   return (
       <motion.div
@@ -125,10 +124,6 @@ const ResultCard: FC<{ result: CropPredictionOutput }> = ({ result }) => {
               </div>
             )}
             
-            <div className="flex items-start gap-2 text-xs text-muted-foreground pt-3 border-t border-border mt-4">
-              <Info className="h-4 w-4 mt-0.5 shrink-0"/>
-              <p>{pageStrings.resultDisclaimer}</p>
-            </div>
           </CardContent>
         </Card>
       </motion.div>
@@ -138,7 +133,7 @@ const ResultCard: FC<{ result: CropPredictionOutput }> = ({ result }) => {
 
 const CropYieldPage: FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
-  const [result, setResult] = useState<CropPredictionOutput | null>(null);
+  const [result, setResult] = useState<PredictCropYieldOutput | null>(null);
   const { toast } = useToast();
 
   const form = useForm<CropYieldFormValues>({
@@ -156,7 +151,7 @@ const CropYieldPage: FC = () => {
     setLoading(true);
     setResult(null);
 
-    const inputData: CropPredictionInput = {
+    const inputData: PredictCropYieldInput = {
       ...values,
       plantingDate: format(values.plantingDate, 'yyyy-MM-dd'),
       landAreaHectares: Number(values.landAreaHectares) // Ensure it's a number
