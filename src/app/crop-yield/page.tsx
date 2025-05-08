@@ -321,4 +321,3 @@ const CropYieldPage: FC = () => {
 };
 
 export default CropYieldPage;
-```
