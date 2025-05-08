@@ -10,14 +10,9 @@ import { predictCropYield, type PredictCropYieldOutput, type PredictCropYieldInp
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label'; // Keep if used outside RHF Form
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
-import { CalendarIcon, Loader2, ArrowLeft, Info, AlertTriangleIcon, CheckCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,26 +21,22 @@ import { useToast } from '@/hooks/use-toast';
 const pageStrings = {
     title: "Crop Yield Prediction",
     description: "Enter your crop details to estimate the potential yield.",
-    cropTypeLabel: "Crop Type",
-    cropTypePlaceholder: "e.g., Wheat, Corn, Rice",
-    locationLabel: "Location (City/Region, Country)",
-    locationPlaceholder: "e.g., Central Valley, CA, USA",
-    plantingDateLabel: "Planting Date",
+    cropLabel: "Crop",
+    cropPlaceholder: "e.g., Wheat, Corn, Rice",
+    stateLabel: "State/Region",
+    statePlaceholder: "e.g., California, Punjab",
     seasonLabel: "Season",
     seasonPlaceholder: "Select a season",
-    landAreaLabel: "Land Area (Hectares)",
-    landAreaPlaceholder: "e.g., 2.5",
-    pickDate: "Pick a date",
+    areaLabel: "Land Area (Hectares)",
+    areaPlaceholder: "e.g., 2.5",
     predictButton: "Predict Yield",
     predictingButton: "Predicting...",
     predictionFailedErrorTitle: "Prediction Failed",
     predictionFailedErrorDescription: "Failed to predict crop yield. Please check your input or try again later.",
-    resultTitle: "Predicted Yield Analysis",
-    predictedYieldLabel: "Estimated Yield:",
-    resultUnit: "kg/ha",
-    confidenceScoreLabel: "Confidence Score:",
-    factorsConsideredLabel: "Factors Considered:",
-    potentialRisksLabel: "Potential Risks:",
+    resultTitle: "Predicted Production",
+    predictedProductionLabel: "Estimated Production:",
+    // Add unit if known, otherwise just display the number
+    // resultUnit: "kg", 
     backToHome: "Back to Home"
 };
 
@@ -56,12 +47,12 @@ const seasonOptions = [
     { value: "Whole Year", label: "Whole Year" },
 ];
 
+// Updated Zod schema to match backend expectations
 const formSchema = z.object({
-  cropType: z.string().min(2, { message: 'Crop type must be at least 2 characters.' }),
-  location: z.string().min(3, { message: 'Location must be at least 3 characters (e.g., City, Country).' }),
-  plantingDate: z.date({ required_error: 'Planting date is required.' }),
+  crop: z.string().min(2, { message: 'Crop name must be at least 2 characters.' }),
+  state: z.string().min(2, { message: 'State/Region must be at least 2 characters.' }),
   season: z.string().min(1, { message: 'Season is required.' }),
-  landAreaHectares: z.coerce.number().min(0.01, { message: 'Land area must be a positive number greater than 0.' }),
+  area: z.coerce.number().min(0.01, { message: 'Land area must be a positive number greater than 0.' }),
 });
 
 type CropYieldFormValues = z.infer<typeof formSchema>;
@@ -73,7 +64,6 @@ const LoadingSpinner: FC = () => (
 );
 
 const ResultCard: FC<{ result: PredictCropYieldOutput }> = ({ result }) => {
-  const confidencePercentage = result.confidenceScore ? (result.confidenceScore * 100).toFixed(1) + "%" : "N/A";
   return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -90,40 +80,12 @@ const ResultCard: FC<{ result: PredictCropYieldOutput }> = ({ result }) => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <p className="text-sm font-semibold text-muted-foreground">{pageStrings.predictedYieldLabel}</p>
+              <p className="text-sm font-semibold text-muted-foreground">{pageStrings.predictedProductionLabel}</p>
               <p className="text-3xl font-bold text-primary">
-                {result.predictedYieldKgPerHa.toLocaleString()} {pageStrings.resultUnit}
+                {/* Assuming the backend provides the unit or it's implicitly known */}
+                {result.predicted_production.toLocaleString()} {/* Add unit if available pageStrings.resultUnit */}
               </p>
             </div>
-
-            {result.confidenceScore !== undefined && (
-              <div>
-                <p className="text-sm font-semibold text-muted-foreground">{pageStrings.confidenceScoreLabel}</p>
-                <p className="text-lg text-foreground">{confidencePercentage}</p>
-              </div>
-            )}
-
-            {result.factorsConsidered && result.factorsConsidered.length > 0 && (
-              <div>
-                <p className="text-sm font-semibold text-muted-foreground">{pageStrings.factorsConsideredLabel}</p>
-                <ul className="list-disc list-inside text-sm text-foreground space-y-1 pl-2">
-                  {result.factorsConsidered.map((factor, index) => <li key={index}>{factor}</li>)}
-                </ul>
-              </div>
-            )}
-
-            {result.potentialRisks && result.potentialRisks.length > 0 && (
-              <div>
-                <p className="text-sm font-semibold text-muted-foreground flex items-center gap-1">
-                  <AlertTriangleIcon className="h-4 w-4 text-destructive" />
-                  {pageStrings.potentialRisksLabel}
-                </p>
-                <ul className="list-disc list-inside text-sm text-destructive/90 space-y-1 pl-2">
-                  {result.potentialRisks.map((risk, index) => <li key={index}>{risk}</li>)}
-                </ul>
-              </div>
-            )}
-            
           </CardContent>
         </Card>
       </motion.div>
@@ -139,11 +101,10 @@ const CropYieldPage: FC = () => {
   const form = useForm<CropYieldFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      cropType: '',
-      location: '',
-      plantingDate: undefined,
+      crop: '',
+      state: '',
       season: '',
-      landAreaHectares: '', // Initialize with empty string
+      area: '', // Initialize with empty string for coerce.number
     },
   });
 
@@ -152,9 +113,10 @@ const CropYieldPage: FC = () => {
     setResult(null);
 
     const inputData: PredictCropYieldInput = {
-      ...values,
-      plantingDate: format(values.plantingDate, 'yyyy-MM-dd'),
-      landAreaHectares: Number(values.landAreaHectares) // Ensure it's a number
+      crop: values.crop,
+      state: values.state,
+      season: values.season,
+      area: Number(values.area) // Ensure it's a number
     };
 
     try {
@@ -189,12 +151,12 @@ const CropYieldPage: FC = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
                 control={form.control}
-                name="cropType"
+                name="crop"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{pageStrings.cropTypeLabel}</FormLabel>
+                    <FormLabel>{pageStrings.cropLabel}</FormLabel>
                     <FormControl>
-                      <Input placeholder={pageStrings.cropTypePlaceholder} {...field} />
+                      <Input placeholder={pageStrings.cropPlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -202,12 +164,12 @@ const CropYieldPage: FC = () => {
               />
               <FormField
                 control={form.control}
-                name="location"
+                name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{pageStrings.locationLabel}</FormLabel>
+                    <FormLabel>{pageStrings.stateLabel}</FormLabel>
                     <FormControl>
-                      <Input placeholder={pageStrings.locationPlaceholder} {...field} />
+                      <Input placeholder={pageStrings.statePlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -215,54 +177,13 @@ const CropYieldPage: FC = () => {
               />
                <FormField
                 control={form.control}
-                name="landAreaHectares"
+                name="area"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{pageStrings.landAreaLabel}</FormLabel>
+                    <FormLabel>{pageStrings.areaLabel}</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder={pageStrings.landAreaPlaceholder} {...field} />
+                      <Input type="number" step="0.01" placeholder={pageStrings.areaPlaceholder} {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="plantingDate"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>{pageStrings.plantingDateLabel}</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={'outline'}
-                            className={cn(
-                              'w-full pl-3 text-left font-normal',
-                              !field.value && 'text-muted-foreground'
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, 'PPP')
-                            ) : (
-                              <span>{pageStrings.pickDate}</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date('1900-01-01')
-                          }
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -306,7 +227,6 @@ const CropYieldPage: FC = () => {
 
           <AnimatePresence>
             {loading && <LoadingSpinner />}
-            {/* Error display removed as it's handled by toast now */}
             {result && !loading && <ResultCard result={result} />}
           </AnimatePresence>
         </CardContent>
