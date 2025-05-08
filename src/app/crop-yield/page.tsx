@@ -143,7 +143,7 @@ const CropYieldPage: FC = () => {
       location: '',
       plantingDate: undefined,
       season: '',
-      landAreaHectares: undefined,
+      landAreaHectares: '', // Initialize with empty string
     },
   });
 
