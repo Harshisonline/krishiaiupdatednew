@@ -2,13 +2,13 @@ import type { PredictCropYieldInput, PredictCropYieldOutput } from '@/ai/flows/c
 
 /**
  * Represents the data required for crop yield prediction.
- * This type aligns with the input schema previously used by the Genkit flow.
+ * This type aligns with the input schema now used by the simplified flow.
  */
 export type CropPredictionInput = PredictCropYieldInput;
 
 /**
  * Represents the predicted crop yield and related information.
- * This type aligns with the output schema previously used by the Genkit flow.
+ * This type aligns with the output schema now used by the simplified flow.
  * Note: predictedYieldKgPerHa is the yield in kg per hectare.
  */
 export type CropPredictionOutput = PredictCropYieldOutput;
@@ -38,19 +38,24 @@ export async function predictCropYield(cropData: CropPredictionInput): Promise<C
       try {
         errorBody = await response.text();
       } catch (e) {
-        console.warn('Could not read error body:', e);
+        // Non-critical error, continue with original status text
+        console.warn('Could not read error body while handling API error:', e);
       }
       console.error(`Error from API: ${response.status} ${response.statusText}`, errorBody);
       throw new Error(`API request failed with status ${response.status}: ${errorBody || response.statusText}`);
     }
 
+    // Assuming the API directly returns data matching CropPredictionOutput schema
     const result: CropPredictionOutput = await response.json();
     console.log('Yield prediction result from external API:', result);
     return result;
   } catch (error) {
     console.error('Error calling external crop yield API:', error);
     // Re-throw to let the UI handle it with a toast.
-    throw new Error(`Failed to predict crop yield via external API: ${error instanceof Error ? error.message : String(error)}`);
+    // The error message should be informative enough for the user/toast.
+    if (error instanceof Error && error.message.startsWith('API request failed')) {
+        throw error; // Re-throw specific API errors as is
+    }
+    throw new Error(`Failed to get crop yield prediction from the external service. Please try again. Details: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
-

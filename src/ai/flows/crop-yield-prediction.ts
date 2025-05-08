@@ -1,15 +1,16 @@
 'use server';
 /**
- * @fileOverview A crop yield prediction AI agent.
+ * @fileOverview A crop yield prediction agent that uses an external API.
  *
- * - predictCropYield - A function that handles the crop yield prediction process.
+ * - predictCropYield - A function that handles the crop yield prediction process by calling an external API.
  * - PredictCropYieldInput - The input type for the predictCropYield function.
  * - PredictCropYieldOutput - The return type for the predictCropYield function.
  */
 
-import {ai} from '@/ai/ai-instance';
-import {z} from 'genkit';
+import { z } from 'genkit';
+import { predictCropYield as predictCropYieldService } from '@/services/crop-yield';
 
+// Input schema remains the same as it defines the data structure expected by the service/API.
 const PredictCropYieldInputSchema = z.object({
   cropType: z.string().describe('The type of crop (e.g., Wheat, Corn, Rice).'),
   location: z.string().describe('The geographical location (e.g., Central Valley, CA, Punjab, India).'),
@@ -19,6 +20,7 @@ const PredictCropYieldInputSchema = z.object({
 });
 export type PredictCropYieldInput = z.infer<typeof PredictCropYieldInputSchema>;
 
+// Output schema remains the same as it defines the data structure expected from the service/API.
 const PredictCropYieldOutputSchema = z.object({
   predictedYieldKgPerHa: z.number().describe('The predicted crop yield in kilograms per hectare (kg/ha).'),
   confidenceScore: z.number().min(0).max(1).describe('A confidence score for the prediction (0.0 to 1.0).').optional(),
@@ -27,51 +29,26 @@ const PredictCropYieldOutputSchema = z.object({
 });
 export type PredictCropYieldOutput = z.infer<typeof PredictCropYieldOutputSchema>;
 
+/**
+ * Predicts crop yield by calling an external API via the service layer.
+ * No AI model/Genkit flow is used here for the prediction itself.
+ *
+ * @param input - The data required for crop yield prediction.
+ * @returns A promise that resolves to the prediction output from the external API.
+ */
 export async function predictCropYield(input: PredictCropYieldInput): Promise<PredictCropYieldOutput> {
-  return predictCropYieldGenkitFlow(input);
-}
-
-const prompt = ai.definePrompt({
-  name: 'predictCropYieldPrompt',
-  input: {schema: PredictCropYieldInputSchema},
-  output: {schema: PredictCropYieldOutputSchema},
-  prompt: `You are an advanced agricultural AI expert specializing in crop yield prediction.
-Based on the following information, predict the crop yield in kilograms per hectare (kg/ha).
-
-Crop Information:
-- Crop Type: {{{cropType}}}
-- Location: {{{location}}}
-- Planting Date: {{{plantingDate}}}
-- Season: {{{season}}}
-- Land Area: {{{landAreaHectares}}} hectares
-
-Provide your prediction for yield in kilograms per hectare (kg/ha) in the specified JSON format.
-The output field 'predictedYieldKgPerHa' should represent this value.
-Include a confidence score for your prediction (between 0.0 and 1.0).
-List the key factors you considered in making this prediction.
-Also, list any potential risks that could significantly alter this predicted yield.
-
-Consider factors like typical climate for the location and season, general soil knowledge for the region,
-common pests or diseases for the crop in that area, and typical yield ranges for the specified crop under normal conditions.
-The land area provided might influence factors like management scale or microclimate variations, but the yield prediction should still be per hectare.
-Do not ask for more information. Make the best prediction with the given details.
-If the location is very general, assume typical conditions for that broader region.
-The planting date and season help narrow down the growth cycle and environmental conditions.`,
-});
-
-const predictCropYieldGenkitFlow = ai.defineFlow(
-  {
-    name: 'predictCropYieldGenkitFlow',
-    inputSchema: PredictCropYieldInputSchema,
-    outputSchema: PredictCropYieldOutputSchema,
-  },
-  async (input: PredictCropYieldInput) => {
-    const {output} = await prompt(input);
-    if (!output) {
-      throw new Error('Crop yield prediction failed to return an output.');
+  // Validate input against the schema if needed, though the service might do this.
+  // For now, directly pass it to the service.
+  try {
+    const result = await predictCropYieldService(input);
+    // The service already returns PredictCropYieldOutput, so we can return it directly.
+    return result;
+  } catch (error) {
+    console.error('Error in predictCropYield flow calling service:', error);
+    // Re-throw the error to be handled by the calling UI component (e.g., display a toast)
+    if (error instanceof Error) {
+      throw new Error(`Crop yield prediction service failed: ${error.message}`);
     }
-    // Return the AI's output directly without additional logic
-    return output;
+    throw new Error('An unknown error occurred during crop yield prediction.');
   }
-);
-
+}
