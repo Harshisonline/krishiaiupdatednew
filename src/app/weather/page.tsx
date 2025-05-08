@@ -8,29 +8,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ArrowLeft, Loader2, Cloud, Sun, Thermometer, Wind, Droplets, CloudSun } from 'lucide-react'; // Added CloudSun
+import { ArrowLeft, Loader2, Cloud, Sun, Thermometer, Wind, Droplets, CloudSun, Lightbulb } from 'lucide-react';
 import { getWeatherData, type WeatherData, type WeatherInput } from '@/services/weather';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 
 
 const pageStrings = {
-  title: "Weather Forecast",
-  description: "Enter a location to get the current weather conditions and forecast.",
+  title: "Weather Forecast & Farmer Advice",
+  description: "Enter a location to get current weather, forecast, and actionable advice for farmers.",
   locationLabel: "Location",
   locationPlaceholder: "e.g., New York, London, Tokyo",
-  getWeatherButton: "Get Weather",
-  fetchingWeatherButton: "Fetching Weather...",
+  getWeatherButton: "Get Weather & Advice",
+  fetchingWeatherButton: "Fetching...",
   backToHome: "Back to Home",
-  weatherApiNotIntegrated: "Weather API is not yet integrated. Displaying mock data.",
-  errorFetchingWeather: "Failed to fetch weather data. Please try again later.",
+  weatherApiNotIntegrated: "Weather & Recommendation AI is active.", // Updated
+  errorFetchingWeather: "Failed to fetch weather data or recommendations. Please try again later.",
   currentWeatherTitle: "Current Weather in {location}",
   temperature: "Temperature",
   feelsLike: "Feels Like",
   condition: "Condition",
   humidity: "Humidity",
   windSpeed: "Wind Speed",
-  enterLocationPrompt: "Please enter a location to see the weather forecast.",
+  enterLocationPrompt: "Please enter a location to see the weather forecast and farmer advice.",
+  farmerRecommendationsTitle: "Farmer Recommendations",
+  noRecommendations: "No specific recommendations at this time. Monitor crops closely.",
 };
 
 const LoadingSpinner: FC = () => (
@@ -44,44 +46,68 @@ const WeatherDisplay: FC<{ data: WeatherData; location: string }> = ({ data, loc
     <Card className="mt-6 bg-secondary text-secondary-foreground shadow-lg">
       <CardHeader>
         <CardTitle className="text-xl text-primary flex items-center gap-2">
-          {data.iconUrl ? (
+          {data.iconUrl && !data.iconUrl.includes('picsum.photos') ? ( // Check if it's not a placeholder
             <Image src={data.iconUrl} alt={data.condition} width={32} height={32} data-ai-hint="weather condition" />
           ) : (
             <CloudSun className="h-6 w-6" />
           )}
-          {pageStrings.currentWeatherTitle.replace('{location}', location)}
+          {pageStrings.currentWeatherTitle.replace('{location}', data.locationName || location)}
         </CardTitle>
         <CardDescription>{data.condition}</CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-2 gap-4">
-        <div className="flex items-center gap-2">
-          <Thermometer className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-sm text-muted-foreground">{pageStrings.temperature}</p>
-            <p className="text-lg font-semibold">{data.temperature}°C</p>
-          </div>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+            <div className="flex items-center gap-2">
+            <Thermometer className="h-5 w-5 text-primary" />
+            <div>
+                <p className="text-sm text-muted-foreground">{pageStrings.temperature}</p>
+                <p className="text-lg font-semibold">{data.temperature}°C</p>
+            </div>
+            </div>
+            <div className="flex items-center gap-2">
+            <Thermometer className="h-5 w-5 text-primary" />
+            <div>
+                <p className="text-sm text-muted-foreground">{pageStrings.feelsLike}</p>
+                <p className="text-lg font-semibold">{data.feelsLike}°C</p>
+            </div>
+            </div>
+            <div className="flex items-center gap-2">
+            <Droplets className="h-5 w-5 text-primary" />
+            <div>
+                <p className="text-sm text-muted-foreground">{pageStrings.humidity}</p>
+                <p className="text-lg font-semibold">{data.humidity}%</p>
+            </div>
+            </div>
+            <div className="flex items-center gap-2">
+            <Wind className="h-5 w-5 text-primary" />
+            <div>
+                <p className="text-sm text-muted-foreground">{pageStrings.windSpeed}</p>
+                <p className="text-lg font-semibold">{data.windSpeed} km/h</p>
+            </div>
+            </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Thermometer className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-sm text-muted-foreground">{pageStrings.feelsLike}</p>
-            <p className="text-lg font-semibold">{data.feelsLike}°C</p>
+        {data.farmerRecommendations && data.farmerRecommendations.length > 0 && (
+          <div className="pt-4 border-t border-border/50">
+            <h4 className="text-md font-semibold text-primary flex items-center gap-2 mb-2">
+              <Lightbulb className="h-5 w-5" />
+              {pageStrings.farmerRecommendationsTitle}
+            </h4>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              {data.farmerRecommendations.map((rec, index) => (
+                <li key={index}>{rec}</li>
+              ))}
+            </ul>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Droplets className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-sm text-muted-foreground">{pageStrings.humidity}</p>
-            <p className="text-lg font-semibold">{data.humidity}%</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Wind className="h-5 w-5 text-primary" />
-          <div>
-            <p className="text-sm text-muted-foreground">{pageStrings.windSpeed}</p>
-            <p className="text-lg font-semibold">{data.windSpeed} km/h</p>
-          </div>
-        </div>
+        )}
+        {(!data.farmerRecommendations || data.farmerRecommendations.length === 0) && (
+           <div className="pt-4 border-t border-border/50">
+             <h4 className="text-md font-semibold text-primary flex items-center gap-2 mb-2">
+                <Lightbulb className="h-5 w-5" />
+                {pageStrings.farmerRecommendationsTitle}
+              </h4>
+             <p className="text-sm text-muted-foreground">{pageStrings.noRecommendations}</p>
+           </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -92,13 +118,13 @@ const WeatherPage: FC = () => {
   const [location, setLocation] = useState<string>('');
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // For direct error display if needed, toast is primary
   const { toast } = useToast();
 
-  // Temporary: Show a toast message that API is not integrated yet
   useEffect(() => {
+    // This toast can be removed or changed if the API is now fully integrated via Genkit
     toast({
-      title: "Under Development",
+      title: "AI-Powered Weather",
       description: pageStrings.weatherApiNotIntegrated,
       variant: "default",
       duration: 5000,
@@ -119,12 +145,13 @@ const WeatherPage: FC = () => {
     setError(null);
     setWeatherData(null);
     try {
-      const data = await getWeatherData({ location });
+      const input: WeatherInput = { location };
+      const data = await getWeatherData(input);
       setWeatherData(data);
     } catch (err) {
       console.error("Error fetching weather data:", err);
       const errorMessage = err instanceof Error ? err.message : pageStrings.errorFetchingWeather;
-      setError(errorMessage);
+      setError(errorMessage); // Set local error if needed for specific UI changes
       toast({
         title: "Error",
         description: errorMessage,
@@ -171,7 +198,7 @@ const WeatherPage: FC = () => {
             
             {weatherData && !loading && <WeatherDisplay data={weatherData} location={location} />}
 
-            {!loading && !weatherData && !error && (
+            {!loading && !weatherData && !error && ( // Show prompt if no data, no loading, and no error
                <Alert className="mt-6 bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/30 dark:border-blue-700 dark:text-blue-300">
                 <CloudSun className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 <AlertTitle>Ready to check the weather?</AlertTitle>
