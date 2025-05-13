@@ -1,4 +1,6 @@
 #Krishi AI+
+
+
 KrishiAI+ offers a smart farming assistant + traffic control ecosystem:
 Recommends crops based on soil image via CNN
 Detects plant diseases via CNN-based visual input 
