@@ -6,7 +6,7 @@ Recommends crops based on soil image via CNN
 Detects plant diseases via CNN-based visual input 
 Predicts crop yield using ML 
 Sends weather alerts for proactive farming
-Assists farmers via voice in regional languages Connects with govt subsidy schemes
+Assists farmers via voice in regional languages and Connects with govt subsidy schemes
 Includes a Congestion Control Simulator to handle backend traffic during heavy usage
 
 
